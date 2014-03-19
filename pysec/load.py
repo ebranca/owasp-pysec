@@ -19,9 +19,12 @@
 import imp
 import os
 import hashlib
-import string
 import base64
 from types import ModuleType
+
+
+ASCII_LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+DIGITS = '0123456789'
 
 
 _HASHES = {
@@ -32,8 +35,8 @@ _HASHES = {
 }
 
 
-_FIRST_LETTERS = '_%s' % string.ascii_letters
-_OTHER_LETTERS = '_%s%s' % (string.ascii_letters, string.digits)
+_FIRST_LETTERS = '_%s' % string.ASCII_LETTERS
+_OTHER_LETTERS = '_%s%s' % (string.ASCII_LETTERS, string.DIGITS)
 
 
 is_hex = lambda s: all(ch in string.hexdigits for ch in s)
@@ -198,7 +201,6 @@ def make_line(path, name, version):
     path = os.path.abspath(path)
     path64 = base64.b64encode(path)
     name = str(name)
-    # XXX check
     version = tuple(version)
     hashes = []
     for hs_name, hs_func in _HASHES.iteritems():
