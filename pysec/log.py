@@ -21,7 +21,7 @@ import time
 import types
 import inspect
 import errno
-from .core.monotonic import monotonic_time
+from pysec.core.monotonic import monotonic_time
 
 EVENT_START = 0
 EVENT_SUCCESS = 1
@@ -121,7 +121,6 @@ class Logger(object):
         def _wrap(fun):
             def __wrap(*args, **kwargs):
                 with self.ctx(action) as log:
-                    # FIXME
                     kwargs['log'] = log
                     fun(*args, **kwargs)
             return __wrap
