@@ -53,7 +53,7 @@ class Logger(object):
         self.__local_emits = []
         self._time_offset = monotonic_time()
         self.start_time = int(timer if isinstance(timer, (int, long))
-                          else timer()) 
+                              else timer())
 
     def add_global_emit(self, emiter):
         self.global_emits.append(emiter)
@@ -77,7 +77,7 @@ class Logger(object):
             log = log.parent
 
     def log(self, event, errcode, info):
-        time = self.start_time + (monotonic_time() - self._time_offset) 
+        time = self.start_time + (monotonic_time() - self._time_offset)
         log = self
         while log:
             actions = tuple(self.actions())
@@ -89,7 +89,6 @@ class Logger(object):
             for em in log.global_emits:
                 em(event, time, actions, int(errcode), fields, info)
             log = log.parent
-
 
     def action(self, action=None, info=None, res_hdl=None,
                ex_hdl=None, reraise=1):
@@ -155,7 +154,7 @@ def push_log(frame, action, fields=None):
     else:
         parent = get_log()
     log = frame.f_locals['__log__'] = Logger(action, fields, parent,
-                                       parent.start_time)
+                                             parent.start_time)
     return log
 
 
@@ -230,6 +229,7 @@ def ctx(action, fields=None):
 def wrap(action, fields=(), result=None, err_hdl=None, lib=0):
     if result is not None:
         result = str(result)
+
     def _fun(fun):
         def __fun(*args, **kwargs):
             kwds = inspect.getcallargs(fun, *args, **kwargs)
@@ -269,7 +269,7 @@ def register_error(name, code=None):
     code = int(code)
     name = str(name).lower()
     if code < 0:
-        raise ValueError("invalid negative integer like action code: %d" % code)
+        raise ValueError("invalid negative integer as action code: %d" % code)
     if code in ERRORS:
         raise ValueError("code already present: %d" % code)
     if name in ERR_NAMES:
@@ -307,7 +307,7 @@ def register_action(name, code=None):
     code = int(code)
     name = str(name).lower()
     if code < 0:
-        raise ValueError("invalid negative integer like action code: %d" % code)
+        raise ValueError("invalid negative integer as action code: %d" % code)
     if code in ACTIONS:
         raise ValueError("code already present: %d" % code)
     if name in ACT_NAMES:

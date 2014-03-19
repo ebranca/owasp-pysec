@@ -23,10 +23,10 @@ class RotationKV(HardKV):
     def __init__(self, maker, maxsize, maxfiles, *files):
         maxsize = int(maxsize)
         if maxsize <= 0:
-            raise ValueError("maxsize is not a positive integer: %r" % maxsize)
+            raise ValueError("maxsize is not positive: %r" % maxsize)
         maxfiles = int(maxfiles)
         if maxfiles <= 0:
-            raise ValueError("maxfiles is not a positive integer: %r" % maxfiles)
+            raise ValueError("maxfiles is not positive: %r" % maxfiles)
         self.maxsize = maxsize
         self.maxfiles = maxfiles
         self.maker = maker

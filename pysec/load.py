@@ -43,8 +43,8 @@ def check_libname(name):
     name = str(name)
     if not name:
         return 0
-    return name[0] in _FIRST_LETTERS and \
-           all(ch in _OTHER_LETTERS for ch in name[1:])
+    return (name[0] in _FIRST_LETTERS and
+            all(ch in _OTHER_LETTERS for ch in name[1:]))
 
 
 def parse_version(version):
@@ -86,15 +86,15 @@ def get_hash(path, hs):
         files = [path]
     elif os.path.isdir(path):
         files = sorted([os.path.join(dirpath, fname)
-                    	for dirpath, _, filenames in os.walk(path)
-            			for fname in filenames
-                    	if os.path.isfile(os.path.join(dirpath, fname))])
+                       for dirpath, _, filenames in os.walk(path)
+                       for fname in filenames
+                       if os.path.isfile(os.path.join(dirpath, fname))])
     else:
         raise ImportError("invalid file type %r" % path)
     for fpath in files:
         _hash(fpath, hs)
     return hs.hexdigest()
-                
+
 
 _CACHE = {}
 _TAB = {}
@@ -111,8 +111,9 @@ class __LazyModule(ModuleType):
         return getattr(self.module or importlib(self.name, self.version), name)
 
     def __setattr__(self, name, value):
-        return setattr(self.module or importlib(self.name, self.version), name, value)
-        
+        return setattr(self.module or importlib(self.name, self.version),
+                       name, value)
+
     def __delattr__(self, name):
         return delattr(self.module or importlib(self.name, self.version), name)
 
@@ -139,12 +140,12 @@ def load_tab(path):
             # hashes
             hashes = parse_hashes(hashes)
             if hashes is None:
-                raise ImportError("wrong hashes field format at line %d" % lineno)
+                raise ImportError("wrong hash format at line %d" % lineno)
             # update tab
             mod_vers = _tab.setdefault(name, {})
             if version in mod_vers:
                 raise ImportError("duplicated library: %r %d.%d.%d"
-                                    % (name, version[0], version[1], version[2]))
+                                  % (name, version[0], version[1], version[2]))
             mod_vers[version] = {'path': path, 'hash': hashes}
     _TAB.update(_tab)
 
@@ -152,11 +153,11 @@ def load_tab(path):
 def importlib(name, version=None, lazy=0, reload=0):
     """Load a library and return it.
     name        library's name
-    version     if it's None it load lastest library, otherwise load the version
-                specified
-    lazy        if false it returns normal module, otherwise it returns a module
-                placeholder and it will be loaded the first time that it will
-                be used
+    version     if it's None it load lastest library, otherwise load the
+                version specified
+    lazy        if false it returns normal module, otherwise it returns a
+                module placeholder and it will be loaded the first time that
+                it will be used
     reload      if false search library in cache and returns it if exists
                 otherwise it load it. If reload is true load library anse save
                 it in cache
@@ -182,7 +183,7 @@ def importlib(name, version=None, lazy=0, reload=0):
             fdir, fname = os.path.split(path)
             for hs, hval in mod_info['hash'].iteritems():
                 if get_hash(path, hs) != hval:
-                    raise ImportError("module %r %r in %r don't match checksum %r"
+                    raise ImportError("module %r %r in %r don't match hash %r"
                                       % (name, version, path, hval))
             desc = imp.find_module(os.path.splitext(fname)[0], [fdir])
             mod = imp.load_module(name, *desc)
@@ -193,12 +194,15 @@ def importlib(name, version=None, lazy=0, reload=0):
 
 
 def make_line(path, name, version):
+    """Makes a complete string for loader's file"""
     # name, version, path, hashes
     path = os.path.abspath(path)
     path64 = base64.b64encode(path)
     name = str(name)
-    version = tuple(version) # XXX check
+    # XXX check
+    version = tuple(version)
     hashes = []
     for hs_name, hs_func in _HASHES.iteritems():
         hashes.append('%s:%s' % (hs_name, get_hash(path, hs_func)))
-    return '%s;%s;%s;%s' % (str(name), '.'.join(str(vs) for vs in version), path64, ' '.join(hashes))
+    return '%s;%s;%s;%s' % (str(name), '.'.join(str(vs) for vs in version),
+                            path64, ' '.join(hashes))

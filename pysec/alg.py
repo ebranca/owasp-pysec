@@ -17,6 +17,7 @@
 # limitations under the License.
 from itertools import islice
 
+
 def knp(source, pattern, start, stop):
     """Yields all oocurrencies of pattern in source[start:stop]"""
     shifts = [1] * (len(pattern) + 1)

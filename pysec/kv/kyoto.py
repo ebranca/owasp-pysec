@@ -28,7 +28,7 @@ class KyotoKV(kv.HardKV):
     def __init__(self, path, parse=lambda v: v, unparse=lambda v: v):
         self.fk = kyoto.DB()
         if not self.fk.open(path, _OPEN_MODE):
-             raise self.fk.error()
+            raise self.fk.error()
         self.parse = parse
         self.unparse = unparse
 
@@ -69,7 +69,8 @@ class KyotoKV(kv.HardKV):
         return '<KyotoKV %s>' % hex(id(self))
 
     def __repr__(self):
-        return '{%s}' % ', '.join('%r: %r' % (k, v) for k, v in self.iteritems())
+        return '{%s}' % ', '.join('%r: %r' % (k, v)
+                                  for k, v in self.iteritems())
 
     def size(self):
         return os.stat(self.fk.path()).st_size
@@ -106,7 +107,7 @@ class KyotoKV(kv.HardKV):
                     break
                 yield unparse(record[0]), unparse(record[1])
         finally:
-               cursor.disable()
+            cursor.disable()
 
     def values(self):
         return list(self.itervalues())
@@ -129,7 +130,7 @@ class KyotoKV(kv.HardKV):
     def popitem(self):
         item = self.fk.shift()
         if item is None:
-             raise KeyError("popitem(): dictionary is empty")
+            raise KeyError("popitem(): dictionary is empty")
         return self.unparse(item[0]), self.unparse(item[1])
 
     def setdefault(self, key, default=None):
@@ -138,8 +139,10 @@ class KyotoKV(kv.HardKV):
 
     def update(self, **other):
         parse = self.parse
-        self.fk.set_bulks(((parse(k), parse(v)) for k, v in other.iteritems()), 1)
+        self.fk.set_bulks(((parse(k), parse(v))
+                          for k, v in other.iteritems()), 1)
 
     def cas(self, key, oval, nval):
-        if not self.fk.cas(self.parse(key), self.parse(oval), self.parse(nval)):
+        if not self.fk.cas(self.parse(key), self.parse(oval),
+                           self.parse(nval)):
             raise self.fk.error()

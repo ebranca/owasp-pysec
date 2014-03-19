@@ -23,7 +23,7 @@ class KV(DictType):
 
 
 class SoftKV(KV):
-     pass
+    pass
 
 
 class HardKV(KV):
@@ -42,9 +42,12 @@ _NO_KEY = object()
 
 class HybridKV(HardKV, SoftKV):
 
-    def __init__(self, soft_cls, hard_cls, soft_args=(), soft_kwargs=None, hard_args=(), hard_kwargs=None):
-        self.soft = soft_cls(*soft_args, **({} if soft_kwargs is None else soft_kwargs))
-        self.hard = hard_cls(*hard_args, **({} if hard_kwargs is None else hard_kwargs))
+    def __init__(self, soft_cls, hard_cls, soft_args=(), soft_kwargs=None,
+                 hard_args=(), hard_kwargs=None):
+        self.soft = soft_cls(*soft_args,
+                             **({} if soft_kwargs is None else soft_kwargs))
+        self.hard = hard_cls(*hard_args,
+                             **({} if hard_kwargs is None else hard_kwargs))
 
     def refresh(self):
         raise NotImplementedError

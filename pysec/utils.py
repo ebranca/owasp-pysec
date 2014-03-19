@@ -60,7 +60,8 @@ def is_subpath(path1, path2):
 def subtract_path(prefix, path):
     pre = []
     post = []
-    zl = izip_longest(path_split(str(prefix)), path_split(str(path)), fillvalue=None)
+    zl = izip_longest(path_split(str(prefix)), path_split(str(path)),
+                      fillvalue=None)
     for p1, p2 in zl:
         if p1 is None and p2 is None:
             break
@@ -72,7 +73,6 @@ def subtract_path(prefix, path):
     for _, p2 in zl:
         post.append(p2)
     return os.path.join(*pre), os.path.join(*post)
-
 
 
 def xrange(start, stop, step=1):

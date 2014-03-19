@@ -31,7 +31,7 @@ def mkstemp(dir, prefix, suffix):
         file = _os.path.join(dir, '%s%s%s' % (prefix, name, suffix))
         fdr = fdw = -1
         try:
-            fdr = _os.open(file, _os.O_RDONLY|_os.O_CREAT|_os.O_EXCL, 0600)
+            fdr = _os.open(file, _os.O_RDONLY | _os.O_CREAT | _os.O_EXCL, 0600)
             fdw = _os.open(file, _os.O_WRONLY, 0600)
             # _os.unlink(file)
             _set_cloexec(fdr)

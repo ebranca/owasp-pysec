@@ -23,7 +23,6 @@ from ..utils import xrange
 import os
 import fcntl
 
-# FD Errors
 
 class Error(Exception):
     """Generic error for fd module"""
@@ -217,7 +216,8 @@ class File(FD):
             if step == 1:
                 return self.pread(stop - start, start)
             else:
-                return ''.join(self.pread(1, pos)  for pos in xrange(start, stop, step))
+                return ''.join(self.pread(1, pos) for pos
+                               in xrange(start, stop, step))
         raise IndexError('wrong index type: %s' % type(index))
 
     @staticmethod
@@ -308,12 +308,14 @@ class File(FD):
 
     def chunks(self, size,  start=0, stop=None):
         size = int(size)
-        for offset in xrange(*slice(int(start), None if stop is None else int(stop), size).indices(len(self))):
+        for offset in xrange(*slice(int(start),
+                             None if stop is None
+                             else int(stop), size).indices(len(self))):
             yield self.pread(size, offset)
 
 
 class Directory(FD):
-    pass    
+    pass
 
 
 class Socket(FD):
