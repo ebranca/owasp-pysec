@@ -121,8 +121,8 @@ class __LazyModule(ModuleType):
 def load_tab(path):
     path = os.path.abspath(str(path))
     _tab = {}
-    with open(path, 'rb') as ftab:
-        for lineno, line in enumerate(ftab):
+    with fd.File.open(path, fd.FO_READ) as ftab:
+        for lineno, line in enumerate(ftab.lines()):
             fields = line.strip().split(';')
             # name, version, path, hashes
             if len(fields) != 4:
@@ -179,7 +179,6 @@ def importlib(name, version=None, lazy=0, reload=0):
         if lazy:
             return __LazyModule(name, path)
         else:
-            # TODO replace with psi.io.File
             fdir, fname = os.path.split(path)
             for hs, hval in mod_info['hash'].iteritems():
                 if get_hash(path, hs) != hval:
