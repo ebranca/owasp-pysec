@@ -25,10 +25,10 @@ from types import ModuleType
 
 
 _HASHES = {
-    'md5': hashlib.md5,
-    'sha1': hashlib.sha1,
-    'sha256': hashlib.sha256,
-    'sha512': hashlib.sha512
+    'md5': getattr(hashlib, 'md5'),
+    'sha1': getattr(hashlib, 'sha1'),
+    'sha256': getattr(hashlib, 'sha256'),
+    'sha512': getattr(hashlib, 'sha512'),
 }
 
 
