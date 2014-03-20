@@ -165,7 +165,7 @@ def load_tab(path):
     _TAB.update(_tab)
 
 
-def importlib(name, version=None, lazy=0, reload=0):
+def importlib(name, version=None, lazy=0, _reload=0):
     """Load a library and return it.
     name        library's name
     version     if it's None it load lastest library, otherwise load the
@@ -173,8 +173,8 @@ def importlib(name, version=None, lazy=0, reload=0):
     lazy        if false it returns normal module, otherwise it returns a
                 module placeholder and it will be loaded the first time that
                 it will be used
-    reload      if false search library in cache and returns it if exists
-                otherwise it load it. If reload is true load library anse save
+    _reload     if false search library in cache and returns it if exists
+                otherwise it load it. If _reload is true load library anse save
                 it in cache
     """
     name = str(name)
@@ -185,7 +185,7 @@ def importlib(name, version=None, lazy=0, reload=0):
         version = max(vers.iterkeys())
     elif version not in vers:
         raise ImportError("library %r %r not found" % (name, version))
-    if not reload and (name, version) in _CACHE:
+    if not _reload and (name, version) in _CACHE:
         return _CACHE[(name, version)]
     mod_info = vers.get(version)
     try:
