@@ -42,5 +42,5 @@ def knp(source, pattern, start, stop):
 def knp_find(source, pattern, start, stop):
     """Returns a true value if find the pattern in source"""
     for index in knp(source, pattern, start, stop):
-        return index
-    return -1
+        return 1
+    return 0
