@@ -40,10 +40,12 @@ __all__ = 'start', 'success', 'warning', 'error', 'critical', 'end', \
 
 
 class LogError(Exception):
+    """Error in log module"""
     pass
 
 
 class Logger(object):
+    """Class to manage logging operations"""
 
     def __init__(self, action, fields=None, parent=None, timer=time.time):
         self.act = int(action)
@@ -56,27 +58,33 @@ class Logger(object):
                               else timer())
 
     def add_global_emit(self, emiter):
+        """Add an emiter for this logger and for its offspring"""
         self.global_emits.append(emiter)
 
     def add_local_emit(self, emiter):
+        """Add an emiter only for this logger"""
         self.__local_emits.append(emiter)
 
     def subaction(self, action, fields=None):
+        """Create un sublogger for the specified action"""
         return Logger(action, fields, self, self.start_time)
 
     def actions(self):
+        """Generator of all the actions from this logger to the root logger"""
         log = self
         while log:
             yield log.action
             log = log.parent
 
     def all_fields(self):
+        """Generator of all the fields from this logger to the root logger"""
         log = self
         while log:
             yield log.fields
             log = log.parent
 
     def log(self, event, errcode, info):
+        """Emit a log event and call all emiter listening for this logger"""
         time = self.start_time + (monotonic_time() - self._time_offset)
         log = self
         while log:
@@ -92,6 +100,7 @@ class Logger(object):
 
     def action(self, action=None, info=None, res_hdl=None,
                ex_hdl=None, reraise=1):
+        """Decorator to wrap a function that run a action"""
         def _action(fun):
             def __action(*args, **kwds):
                 log = self if action is None else self.subaction(action)
@@ -110,6 +119,9 @@ class Logger(object):
 
     @contextmanager
     def ctx(self, action, info=None):
+        """Create a context to tun the action, it will call log.start() before
+        the block code execution, and log.end() after the end of block code
+        execution"""
         log = self.subaction(action, info)
         if info is None:
             info = {}
@@ -118,6 +130,7 @@ class Logger(object):
         log.end()
 
     def wrap(self, action):
+        """Wrap the function with a log context, as in Logger.ctx()"""
         def _wrap(fun):
             def __wrap(*args, **kwargs):
                 with self.ctx(action) as log:
@@ -139,6 +152,7 @@ class Logger(object):
 
 
 def start_log(action, fields=None, timer=time.time):
+    """This function must be called when you want start logging"""
     frame = inspect.currentframe().f_back
     if frame.f_locals.get('__log__', None):
         raise LogError("log already set")
@@ -146,6 +160,8 @@ def start_log(action, fields=None, timer=time.time):
 
 
 def push_log(frame, action, fields=None):
+    """Create a new __log__ variable in the caller frame and init it with a
+    Logger object"""
     frame = frame.f_back
     log = frame.f_locals.get('__log__', None)
     if log:
@@ -158,6 +174,7 @@ def push_log(frame, action, fields=None):
 
 
 def pop_log(frame):
+    """Remove the Logger object of caller frame"""
     frame = frame.f_back
     while frame:
         log = frame.f_locals.get('__log__', None)
@@ -169,6 +186,9 @@ def pop_log(frame):
 
 
 def get_log(exc=1):
+    """Get the logger of caller frame if it exists.
+    If it doesn't exist and exc is true, a exception LogError will be raised.
+    if it doesn't exist and exc is false, it will return None."""
     frame = inspect.currentframe().f_back
     while frame:
         log = frame.f_locals.get('__log__', None)
@@ -182,42 +202,58 @@ def get_log(exc=1):
 
 # log actions
 def start(**info):
+    """Create a log event *start*, it means that a logical logging
+    context is started"""
     get_log().log(EVENT_START, 0, info)
 
 
 def end(**info):
+    """Create a log event *end*, it means that a logical logging context is
+    terminated"""
     get_log().log(EVENT_END, 0, info)
 
 
 def success(**info):
+    """Create a log event *success*, it means that the action is terminated
+    successfully"""
     get_log().log(EVENT_SUCCESS, 0, info)
 
 
+# alias for success
 ok = success
 
 
 def warning(errcode, **info):
+    """Create a log event *warning*, it means that a strange but not wrong
+    operations is happened"""
     get_log().log(EVENT_WARNING, errcode, info)
 
 
 def error(errcode, **info):
+    """Create a log event *error*, it means that an error occurred but it's
+    not a blocking error"""
     get_log().log(EVENT_ERROR, errcode, info)
 
 
 def critical(errcode, **info):
+    """Create a log event *error*, it means that an error occurred and it's
+    a blocking error"""
     get_log().log(EVENT_CRITICAL, errcode, info)
 
 
 def add_global_emit(emit):
+    """Add a global emiter to current logger"""
     get_log().add_global_emit(emit)
 
 
 def add_local_emit(emit):
+    """Add a local emiter to current logger"""
     get_log().add_local_emit(emit)
 
 
 @contextmanager
 def ctx(action, fields=None):
+    """Create a context with current logger"""
     push_log(inspect.currentframe().f_back, action, fields)
     start()
     yield
@@ -226,6 +262,7 @@ def ctx(action, fields=None):
 
 
 def wrap(action, fields=(), result=None, err_hdl=None, lib=0):
+    """Wrap and create a logging context with current logger"""
     if result is not None:
         result = str(result)
 
@@ -263,6 +300,8 @@ ERR_NAMES = {}
 
 
 def register_error(name, code=None):
+    """Registers the error in errors list, if code is None a free code will be
+    used. Returns the error code"""
     if code is None:
         code = min(-1, *ERRORS.keys()) + 1
     code = int(code)
@@ -279,17 +318,22 @@ def register_error(name, code=None):
 
 
 def register_errors(*onlynames, **withcodes):
-    for name in onlynames:
-        register_error(name)
+    """Registers all error in onlynames, these have not error code and free
+    codes will be used, and in withcodes where the error codes will be
+    specified"""
     for name, code in withcodes.iteritems():
         register_error(name, code)
+    for name in onlynames:
+        register_error(name)
 
 
 def get_error_code(name):
+    """Get error code for this error name"""
     return ERR_NAMES[name]
 
 
 def get_error_name(code):
+    """Get error name for this error code"""
     return ERRORS[code]
 
 
@@ -299,6 +343,8 @@ ACT_NAMES = {}
 
 
 def register_action(name, code=None):
+    """Registers the actions in actions list, if code is None a free code will be
+    used. Returns the action code"""
     if code is None:
         code = min(-1, *ACTIONS.keys()) + 1
         if code < 0:
@@ -317,17 +363,22 @@ def register_action(name, code=None):
 
 
 def register_actions(*onlynames, **withcodes):
-    for name in onlynames:
-        register_action(name)
+    """Registers all actions in onlynames, these have not action code and free
+    codes will be used, and in withcodes where the error codes will be
+    specified"""
     for name, code in withcodes.iteritems():
         register_action(name, code)
+    for name in onlynames:
+        register_action(name)
 
 
 def get_action_code(name):
+    """Get action code for this action code"""
     return ACT_NAMES[name]
 
 
 def get_action_name(code):
+    """Get action name for this action code"""
     return ACTIONS[code]
 
 
@@ -457,6 +508,7 @@ register_errors(**{
 
 
 class _Errors(object):
+    """Utility class to create a errors handler object"""
 
     def __getattr__(self, name):
         name = str(name).lower()
@@ -465,5 +517,5 @@ class _Errors(object):
             raise AttributeError("error %r not found" % name)
         return int(code)
 
-
+# Error handler object
 errors = _Errors()
