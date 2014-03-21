@@ -23,7 +23,7 @@ Prerequisites
 + zlib
 	- ubuntu -> sudo apt-get install  zlib1g-dev
 + [Kyoto Cabinet](http://fallabs.com/kyotocabinet/pkg/kyotocabinet-1.2.76.tar.gz "Kyoto Cabinet")
-+ [Kyoto Cabinet for Python 2.x](http://fallabs.com/kyotocabinet/pythonlegacypkg/kyotocabinet-python-legacy-1.18.tar.gz, "Kyoto Cabinet for Python 2.7")
++ [Kyoto Cabinet for Python 2.x](http://fallabs.com/kyotocabinet/pythonlegacypkg/kyotocabinet-python-legacy-1.18.tar.gz "Kyoto Cabinet for Python 2.7")
 
 
 Install
