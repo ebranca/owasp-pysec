@@ -92,10 +92,10 @@ class Logger(object):
             fields = {}
             for fds in self.all_fields():
                 fields.update(fds)
-            for em in log.__local_emits:
-                em(event, time, actions, int(errcode), fields, info)
-            for em in log.global_emits:
-                em(event, time, actions, int(errcode), fields, info)
+            for emiter in log.__local_emits:
+                emiter(event, time, actions, int(errcode), fields, info)
+            for emiter in log.global_emits:
+                emiter(event, time, actions, int(errcode), fields, info)
             log = log.parent
 
     def action(self, action=None, info=None, res_hdl=None,
@@ -103,7 +103,7 @@ class Logger(object):
         """Decorator to wrap a function that run a action"""
         def _action(fun):
             def __action(*args, **kwds):
-                log = self if action is None else self.subaction(action)
+                log = self if action is None else self.subaction(action, info)
                 try:
                     log.start()
                     res = res_hdl(fun(*args, **kwds))
@@ -132,6 +132,7 @@ class Logger(object):
     def wrap(self, action):
         """Wrap the function with a log context, as in Logger.ctx()"""
         def _wrap(fun):
+            """Returns *fun* wrapped"""
             def __wrap(*args, **kwargs):
                 with self.ctx(action) as log:
                     kwargs['log'] = log
@@ -266,10 +267,12 @@ def wrap(action, fields=(), result=None, err_hdl=None, lib=0):
         result = str(result)
 
     def _fun(fun):
-        """Calls log.start() and fun(), if a exception is raised calls err_hdl with
-        exception and finally calls log.error(errcode, **info), otherwise calls
-        log.success() and returns the value."""
+        """Returns *fun* wrapped"""
         def __fun(*args, **kwargs):
+            """Calls log.start() and fun(), if a exception is raised calls
+            err_hdl with exception and finally calls
+                log.error(errcode, **info)
+            Otherwise calls log.success() and returns the value."""
             kwds = inspect.getcallargs(fun, *args, **kwargs)
             if get_log(lib):
                 push_log(inspect.currentframe(),
