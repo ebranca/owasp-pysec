@@ -515,6 +515,8 @@ MemoryType_contains(PyObject *o1, PyObject *o2)
         plen = ((MemoryObject *)o1)->size;
     }
     else {
+        PyErr_SetString(PyExc_TypeError, "can sarch only Memory objects or strings inside Memory object");
+        return -1;
     }
     switch(Memory_find((MemoryObject *)o1, path, plen, 0, ((MemoryObject *)o1)->size, NULL))
     {
