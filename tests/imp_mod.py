@@ -10,7 +10,6 @@ import pysec.core.unistd
 # io
 print "import pysec.io..."
 import pysec.io
-import pysec.io.create
 import pysec.io.fcheck
 import pysec.io.fd
 import pysec.io.fs
