@@ -17,11 +17,9 @@
 # limitations under the License.
 """Log module"""
 from contextlib import contextmanager
-import time
-import types
+from time import time as get_time
 import inspect
-import errno
-from pysec.core.monotonic import monotonic_time
+from pysec.core.monotonic import monotonic
 
 EVENT_START = 0
 EVENT_SUCCESS = 1
@@ -47,13 +45,13 @@ class LogError(Exception):
 class Logger(object):
     """Class to manage logging operations"""
 
-    def __init__(self, action, fields=None, parent=None, timer=time.time):
+    def __init__(self, action, fields=None, parent=None, timer=get_time):
         self.act = int(action)
         self.fields = {} if fields is None else dict(fields)
         self.parent = parent
         self.global_emits = []
         self.__local_emits = []
-        self._time_offset = monotonic_time()
+        self._time_offset = monotonic()
         self.start_time = int(timer if isinstance(timer, (int, long))
                               else timer())
 
@@ -85,7 +83,7 @@ class Logger(object):
 
     def log(self, event, errcode, info):
         """Emit a log event and call all emiter listening for this logger"""
-        time = self.start_time + (monotonic_time() - self._time_offset)
+        time = self.start_time + (monotonic() - self._time_offset)
         log = self
         while log:
             actions = tuple(self.actions())
@@ -125,9 +123,9 @@ class Logger(object):
         log = self.subaction(action, info)
         if info is None:
             info = {}
-        log.start()
+        start()
         yield log
-        log.end()
+        end()
 
     def wrap(self, action):
         """Wrap the function with a log context, as in Logger.ctx()"""
@@ -140,18 +138,17 @@ class Logger(object):
         return _wrap
 
     def __enter__(self):
-        self.start()
+        start()
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.end()
         return 0
 
     def __str__(self):
         return '<Logger %r:%r>' % (tuple(self.actions()), self.fields)
 
 
-def start_log(action, fields=None, timer=time.time):
+def start_log(action, fields=None, timer=get_time):
     """This function must be called when you want start logging"""
     frame = inspect.currentframe().f_back
     if frame.f_locals.get('__log__', None):
@@ -267,6 +264,9 @@ def wrap(action, fields=(), result=None, err_hdl=None, lib=0):
         result = str(result)
 
     def _fun(fun):
+        """Calls log.start() and fun(), if a exception is raised calls err_hdl with
+        exception and finally calls log.error(errcode, **info), otherwise calls
+        log.success() and returns the value."""
         def __fun(*args, **kwargs):
             kwds = inspect.getcallargs(fun, *args, **kwargs)
             if get_log(lib):
@@ -343,8 +343,8 @@ ACT_NAMES = {}
 
 
 def register_action(name, code=None):
-    """Registers the actions in actions list, if code is None a free code will be
-    used. Returns the action code"""
+    """Registers the actions in actions list, if code is None a free code will
+    be used. Returns the action code"""
     if code is None:
         code = min(-1, *ACTIONS.keys()) + 1
         if code < 0:

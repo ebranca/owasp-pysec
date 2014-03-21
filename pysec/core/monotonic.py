@@ -18,7 +18,7 @@
 import ctypes
 import os
 
-__all__ = 'monotonic_time',
+__all__ = 'monotonic',
 
 
 CLOCK_MONOTONIC = 1
