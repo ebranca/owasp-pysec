@@ -15,4 +15,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# -*- coding: ascii -*-
 """PySec is a set of tools for secure application development under Linux"""
