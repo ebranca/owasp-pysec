@@ -18,7 +18,7 @@
 """Contains FD and FD-like classes for operation with file descriptor"""
 from ..core import unistd
 from ..xsplit import xlines
-from ..alg import KNP_find
+from ..alg import knp_find
 from ..utils import xrange
 import os
 import fcntl
@@ -304,7 +304,7 @@ class File(FD):
 
     def lines(self, start=None, stop=None, eol='\n', keep_eol=1):
         start = self.pos if start is None else int(start)
-        return xlines(self, eol, keep_eol, start, stop, KNP_find)
+        return xlines(self, eol, keep_eol, start, stop, knp_find)
 
     def chunks(self, size,  start=0, stop=None):
         size = int(size)
