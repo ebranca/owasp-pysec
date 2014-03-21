@@ -17,13 +17,20 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
+"""Utilities to create temporary files or directories"""
 import os as _os
 import errno as _errno
 from tempfile import _get_candidate_names, _set_cloexec, TMP_MAX
-import fd
+from pysec.io import fd
 
 
 def mkstemp(dir, prefix, suffix):
+    """Creates a file in directory *dir* using *prefix* and *suffix* to
+    name it:
+            (dir)/<prefix><random_string><postfix>
+    Returns a couple of files (pysec.io.fd.File):
+            (Read_File, Write_File)
+    """
     dir = _os.path.abspath(dir)
     names = _get_candidate_names()
     for seq in xrange(TMP_MAX):
@@ -50,11 +57,17 @@ def mkstemp(dir, prefix, suffix):
 
 
 def mkdtemp(dir, prefix, suffix):
+    """Creates a directory in directory *dir* using *prefix* and *suffix* to
+    name it:
+            (dir)/<prefix><random_string><postfix>
+    Returns absolute path of directory.
+    """
     dir = _os.path.abspath(dir)
     names = _get_candidate_names()
     for seq in xrange(TMP_MAX):
         name = names.next()
-        file = _os.path.join(dir, '%s%s%s' % (prefix, name, suffix))
+        file = _os.path.abspath(_os.path.join(dir, '%s%s%s'
+                                              % (prefix, name, suffix)))
         try:
             _os.mkdir(file, 0700)
             return file
