@@ -65,6 +65,6 @@ Test
 
 Links
 -----
-+ [Main site](//pythonsecurity.org "Python Security")
-+ [OWASP Page](//www.owasp.org/index.php/OWASP_Python_Security_Project "OWASP Python Security Project")
-+ [Github Repository](//https://github.com/ebranca/owasp-pysec "PySec Github")
++ [Main site](http://pythonsecurity.org "Python Security")
++ [OWASP Page](https://www.owasp.org/index.php/OWASP_Python_Security_Project "OWASP Python Security Project")
++ [Github Repository](https://github.com/ebranca/owasp-pysec "PySec Github")
