@@ -17,6 +17,7 @@
 # limitations under the License.
 """"""
 import os
+import resource
 
 MIN_INODES = 64
 MIN_FDS = 64
