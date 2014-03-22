@@ -87,7 +87,7 @@ def parse_hashes(hashes):
 
 def _hash(path, hs_obj):
     """Calculate the hash of path using hs_obj (a Hash Object)"""
-    with open(path, 'rb') as fmod:
+    with fd.File.open(path, 'rb') as fmod:
         chunk = fmod.read(4096)
         while chunk:
             hs_obj.update(chunk)
