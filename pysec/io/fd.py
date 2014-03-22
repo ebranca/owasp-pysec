@@ -21,6 +21,7 @@
 from pysec.core import unistd
 from pysec.xsplit import xlines
 from pysec.alg import knp_find
+from pysec.io import fcheck
 from pysec.utils import xrange
 import os
 import fcntl
@@ -173,37 +174,52 @@ class FD(object):
 
 
 ### Open modes for regular files
-# read only and raise error if it don't exists
+# read only and raise error if it doesn't exists
 FO_READ = 0
 # creates a new file and raise error if it exists, use write mode
 FO_WRNEW = 1
-# open a file in write mode a existent file
+# open a file in write mode an existent file
 FO_WREX = 2
 # creates a new file and raise error if it exists, use append mode
 FO_APNEW = 3
-# open a file in append mode a existent file
+# open a file in append mode an existent file
 FO_APEX = 4
+
+
+_FO_NEW_MODES = FO_WRNEW, FO_APNEW
+
 
 FO_MODES = FO_READ, FO_WRNEW, FO_WREX, FO_APNEW, FO_APEX
 
 
 def _fo_read(fpath, mode):
+    """Opens a regular file in read-only mode,
+    raises an error if it doesn't exists"""
     return os.open(fpath, os.O_RDONLY, mode)
 
 
 def _fo_wrnew(fpath, mode):
+    """Opens a regular file in write-only,
+    raises an error if it exists"""
     return os.open(fpath, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
 
 
 def _fo_wrex(fpath, mode):
+    """Opens a regular file in write-only mode,
+    raises an error if it doesn't exists"""
     return os.open(fpath, os.O_WRONLY, mode)
 
 
 def _fo_apnew(fpath, mode):
-    return os.open(fpath, os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_EXCL, mode)
+    """Opens a regular file in append mode,
+    raises an error if it exists"""
+    return os.open(fpath, os.O_WRONLY | os.O_APPEND |
+                          os.O_CREAT | os.O_EXCL, mode)
 
 
 def _fo_apex(fpath, mode):
+    """Opens a regular file in append mode,
+    raises an error if it doesn't exists"""
     return os.open(fpath, os.O_WRONLY | os.O_APPEND, mode)
 
 
@@ -240,10 +256,19 @@ class File(FD):
         oflag = int(oflag)
         mode = int(mode)
         if oflag not in FO_MODES:
-            raise ValueError("file open mode unknown")
+            raise ValueError("unknown file open mode")
         fopen = _FOMODE2FUNC[oflag]
-        fd = fopen(fpath, mode)
-        return File(fd)
+        fd = -1
+        try:
+            fd = fopen(fpath, mode)
+            fd = File(fd)
+            if mode in _FO_NEW_MODES and not fcheck.ino_check(fd.device):
+                raise OSError("not enough free inodes")
+        except:
+            if fd > -1:
+                os.close(fd)
+            raise
+        return fd
 
     @staticmethod
     def touch(fpath, mode=0666):
@@ -291,6 +316,9 @@ class File(FD):
         if not data:
             return
         dlen = len(data)
+        dev = self.device
+        if not fcheck.space_check(dev, dlen):
+            raise OSError("not enough free space in device %r" % dev)
         wlen = 0
         while wlen < dlen:
             _wlen = unistd.pwrite(fd, data[wlen:], pos + wlen)
@@ -315,6 +343,9 @@ class File(FD):
         if not data:
             return
         dlen = len(data)
+        dev = self.device
+        if not fcheck.space_check(dev, dlen):
+            raise OSError("not enough free space in device %r" % dev)
         wlen = 0
         while wlen < dlen:
             _wlen = unistd.pwrite(fd, data[wlen:], pos + wlen)
