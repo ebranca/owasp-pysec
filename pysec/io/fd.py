@@ -192,10 +192,10 @@ _FO_NEW_MODES = FO_WRNEW, FO_APNEW
 FO_MODES = FO_READ, FO_WRNEW, FO_WREX, FO_APNEW, FO_APEX
 
 
-def _fo_read(fpath, mode):
+def _fo_read(fpath, _):
     """Opens a regular file in read-only mode,
     raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_RDONLY, mode)
+    return os.open(fpath, os.O_RDONLY)
 
 
 def _fo_wrnew(fpath, mode):
@@ -204,10 +204,10 @@ def _fo_wrnew(fpath, mode):
     return os.open(fpath, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
 
 
-def _fo_wrex(fpath, mode):
+def _fo_wrex(fpath, _):
     """Opens a regular file in write-only mode,
     raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_WRONLY, mode)
+    return os.open(fpath, os.O_WRONLY)
 
 
 def _fo_apnew(fpath, mode):
@@ -217,10 +217,10 @@ def _fo_apnew(fpath, mode):
                           os.O_CREAT | os.O_EXCL, mode)
 
 
-def _fo_apex(fpath, mode):
+def _fo_apex(fpath, _):
     """Opens a regular file in append mode,
     raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_APPEND, mode)
+    return os.open(fpath, os.O_WRONLY | os.O_APPEND)
 
 
 _FOMODE2FUNC = _fo_read, _fo_wrnew, _fo_wrex, _fo_apnew, _fo_apex
@@ -254,9 +254,11 @@ class File(FD):
         """Open a file descript for a regular file in fpath using the open mode
         specifie by *oflag* with *mode*"""
         oflag = int(oflag)
-        mode = int(mode)
         if oflag not in FO_MODES:
-            raise ValueError("unknown file open mode")
+            raise ValueError("unknown file open mode: %r" % oflag)
+        mode = int(mode)
+        if not fcheck.mode_check(mode):
+            raise ValueError("wrong mode: %r" % oct(mode))
         fopen = _FOMODE2FUNC[oflag]
         fd = -1
         try:
@@ -274,6 +276,9 @@ class File(FD):
     def touch(fpath, mode=0666):
         """Create a new file with passed *mode* in *fpath*.
         If file *fpath* exists, a IOError will be raised."""
+        mode = int(mode)
+        if not fcheck.mode_check(mode):
+            raise ValueError("wrong mode: %r" % oct(mode))
         fd = -1
         try:
             fd = os.open(fpath, os.O_RDONLY | os.O_CREAT, mode)
