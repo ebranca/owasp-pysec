@@ -60,7 +60,7 @@ Test
 ----
 
     cd tests/
-    ./runall.py
+    python runall.py
 
 
 Links
