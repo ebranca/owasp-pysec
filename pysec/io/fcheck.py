@@ -19,6 +19,7 @@
 # -*- coding: ascii -*-
 """"""
 import os
+import stat
 import resource
 
 MIN_INODES = 64
@@ -36,3 +37,7 @@ def size_check(size):
 def space_check(dev, size):
     stdev = os.statvfs(dev)
     return size < stdev.f_bfree * stdev.f_bsize
+
+
+def mode_check(mode):
+    return 0 <= mode <= 0777
