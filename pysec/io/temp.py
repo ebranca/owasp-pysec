@@ -18,62 +18,79 @@
 #
 # -*- coding: ascii -*-
 """Utilities to create temporary files or directories"""
-import os as _os
-import errno as _errno
+import os
+import errno
+import atexit
 from tempfile import _get_candidate_names, _set_cloexec, TMP_MAX
 from pysec.io import fd
 
 
-def mkstemp(dir, prefix, suffix):
+def mkstemp(dirpath, prefix, suffix, unlink=1):
     """Creates a file in directory *dir* using *prefix* and *suffix* to
     name it:
             (dir)/<prefix><random_string><postfix>
     Returns a couple of files (pysec.io.fd.File):
             (Read_File, Write_File)
+    If *unlink* is true registers a unlink function at exit.
     """
-    dir = _os.path.abspath(dir)
+    dirpath = os.path.abspath(dirpath)
     names = _get_candidate_names()
-    for seq in xrange(TMP_MAX):
+    for _ in xrange(TMP_MAX):
         name = names.next()
-        file = _os.path.join(dir, '%s%s%s' % (prefix, name, suffix))
+        fpath = os.path.join(dirpath, '%s%s%s' % (prefix, name, suffix))
+        if unlink:
+            atexit.register(os.unlink, fpath)
         fdr = fdw = -1
         try:
-            fdr = _os.open(file, _os.O_RDONLY | _os.O_CREAT | _os.O_EXCL, 0600)
-            fdw = _os.open(file, _os.O_WRONLY, 0600)
-            # _os.unlink(file)
+            fdr = os.open(fpath, os.O_RDONLY | os.O_CREAT | os.O_EXCL, 0600)
+            fdw = os.open(fpath, os.O_WRONLY, 0600)
             _set_cloexec(fdr)
             _set_cloexec(fdw)
             return fd.File(fdr), fd.File(fdw)
-        except OSError, e:
+        except OSError, ex:
             if fdr != -1:
-                _os.close(fdr)
+                os.close(fdr)
             if fdw != -1:
-                _os.close(fdw)
-            if e.errno == _errno.EEXIST:
-                # try again
+                os.close(fdw)
+            if ex.errno == errno.EEXIST:
                 continue
+            else:
+                try:
+                    os.unlink(fpath)
+                except IOError:
+                    pass
             raise
-    raise IOError(_errno.EEXIST, "No usable temporary file name found")
+        except:
+            if fdr != -1:
+                os.close(fdr)
+            if fdw != -1:
+                os.close(fdw)
+            try:
+                os.unlink(fpath)
+            except IOError:
+                pass
+            raise
+    raise IOError(errno.EEXIST, "No usable temporary file name found")
 
 
-def mkdtemp(dir, prefix, suffix):
+def mkdtemp(dirpath, prefix, suffix):
     """Creates a directory in directory *dir* using *prefix* and *suffix* to
     name it:
             (dir)/<prefix><random_string><postfix>
     Returns absolute path of directory.
     """
-    dir = _os.path.abspath(dir)
+    dirpath = os.path.abspath(dirpath)
     names = _get_candidate_names()
-    for seq in xrange(TMP_MAX):
+    for _ in xrange(TMP_MAX):
         name = names.next()
-        file = _os.path.abspath(_os.path.join(dir, '%s%s%s'
-                                              % (prefix, name, suffix)))
+        fpath = os.path.abspath(os.path.join(dirpath, '%s%s%s'
+                                % (prefix, name, suffix)))
         try:
-            _os.mkdir(file, 0700)
-            return file
-        except OSError, e:
-            if e.errno == _errno.EEXIST:
+            os.mkdir(fpath, 0700)
+            return fpath
+        except OSError, ex:
+            if ex.errno == errno.EEXIST:
                 # try again
                 continue
             raise
-    raise IOError(_errno.EEXIST, "No usable temporary directory name found")
+    raise IOError(errno.EEXIST, "No usable temporary directory name found")
