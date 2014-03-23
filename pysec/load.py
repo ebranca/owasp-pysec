@@ -18,6 +18,20 @@
 #
 # -*- coding: ascii -*-
 """Module to manage more efficently import of modules"""
+# ASCII_LETTERS = <str>
+# DIGITS = <str>
+# HEXDIGITS = <str>
+# ModuleType = <type>
+# _CACHE = {(<str>,<tuple>): <module>}
+# _FIRST_LETTERS = <str>
+# _HASHES = {<str>: <built-in function>}
+# _OTHER_LETTERS = <str>
+# _TAB = {<str>: <dict>}
+# base64 = <module base64>
+# fd = <module pysec.io.fd>
+# hashlib = <module hashlib>
+# imp = <module imp>
+# os = <module os>
 import imp
 import os
 import hashlib
@@ -32,9 +46,13 @@ HEXDIGITS = '0123456789abcdefABCDEF'
 
 
 _HASHES = {
+    # raise NameError: undefined: getattr
     'md5': getattr(hashlib, 'md5'),
+    # raise NameError: undefined: getattr
     'sha1': getattr(hashlib, 'sha1'),
+    # raise NameError: undefined: getattr
     'sha256': getattr(hashlib, 'sha256'),
+    # raise NameError: undefined: getattr
     'sha512': getattr(hashlib, 'sha512'),
 }
 
@@ -45,11 +63,17 @@ _OTHER_LETTERS = '_%s%s' % (ASCII_LETTERS, DIGITS)
 
 def is_hex(string):
     """Returns True if string is a valid hexadecimal number, otherwise False"""
+    # string = <str>
+    # ch = <str>
+    # return <bool>
     return all(ch in HEXDIGITS for ch in string)
 
 
 def check_libname(name):
     """Returns True if name is a valid string for a library, other False"""
+    # name = <str>
+    # ch = <str>
+    # return <int>|<bool>
     name = str(name)
     if not name:
         return 0
@@ -58,8 +82,11 @@ def check_libname(name):
 
 
 def parse_version(version):
-    """Parse versione string in a tuple, if version is an invalid string
+    """Parse version string in a tuple, if version is an invalid string
     returns None"""
+    # version = <str>
+    # vs = <str>
+    # return <NoneType>|(*<int>)
     version = str(version).split('.')
     if len(version) != 3:
         return None
@@ -69,7 +96,13 @@ def parse_version(version):
 
 
 def parse_hashes(hashes):
-    """Parse hashes's string in hashes's dict, if it's invalid returns None"""
+    """Parse hashes' string in hashes' dict, if it's invalid returns None"""
+    # hashes = <str>
+    # _hashes = {<NoneType>: ?}
+    # hname = <str>
+    # hs_field = <str>
+    # hval = <str>
+    # return {<str>: <str>}|<NoneType>
     _hashes = {}
     if hashes:
         for hs_field in hashes.split(' '):
@@ -87,6 +120,11 @@ def parse_hashes(hashes):
 
 def _hash(path, hs_obj):
     """Calculate the hash of path using hs_obj (a Hash Object)"""
+    # path = <str>
+    # hs_obj = <HASH object>
+    # chunk = <str>
+    # fmod = <file>
+    # return <NoneType>
     with fd.File.open(path, 'rb') as fmod:
         chunk = fmod.read(4096)
         while chunk:
@@ -96,6 +134,15 @@ def _hash(path, hs_obj):
 
 def get_hash(path, hs_maker):
     """Calculates the hash of module in path"""
+    # path = <str>
+    # hs_maker = <function>
+    # dirpath = <str>
+    # filenames = [<str>]
+    # files = [<str>]
+    # fname = <str>
+    # fpath = <str>
+    # hs_mod = <HASH object>
+    # return <str>
     hs_mod = hs_maker()
     if os.path.isfile(path):
         files = [path]
@@ -105,6 +152,7 @@ def get_hash(path, hs_maker):
                        for fname in filenames
                        if os.path.isfile(os.path.join(dirpath, fname))])
     else:
+        # raise <instance ImportError>
         raise ImportError("invalid file type %r" % path)
     for fpath in files:
         _hash(fpath, hs_mod)
@@ -117,25 +165,52 @@ _TAB = {}
 
 class _LazyModule(ModuleType):
     """_LazyModule is a module that instances their attribute in lazy mode"""
+    # instance.module = <NoneType>|<module>
+    # instance.name = <str>
 
     def __init__(self, name, version):
+        # self = <instance load._LazyModule>
+        # name = <str>
+        # version = (*<int>)
+        # return <NoneType>
         self.name = str(name)
         self.version = version
         self.module = None
 
     def __getattr__(self, name):
+        # self = <instance load._LazyModule>
+        # name = <str>
+        # return <module>
+        # raise NameError: undefined: getattr
         return getattr(self.module or importlib(self.name, self.version), name)
 
     def __setattr__(self, name, value):
-        return setattr(self.module or importlib(self.name, self.version),
-                       name, value)
+        # self = <instance load._LazyModule>
+        # name = <str>
+        # value = ?
+        # return <NoneType>
+        setattr(self.module or importlib(self.name, self.version), name, value)
 
     def __delattr__(self, name):
-        return delattr(self.module or importlib(self.name, self.version), name)
+        # self = <instance load._LazyModule>
+        # name = <str>
+        # return <NoneType>
+        delattr(self.module or importlib(self.name, self.version), name)
 
 
 def load_tab(path):
     """Updates internal tab of modules"""
+    # path = <str>
+    # _tab = {<str>: <dict>}
+    # fields = <str>
+    # ftab = <instance pysec.io.fd.File>
+    # hashes = {<str>: <str>}|<NoneType>
+    # line = <str>
+    # lineno = <int>
+    # mod_vers = {<str>: <dict>}
+    # name = <str>
+    # version = <NoneType>|(*<int>)
+    # return <NoneType>
     path = os.path.abspath(str(path))
     _tab = {}
     with fd.File.open(path, fd.FO_READ) as ftab:
@@ -143,24 +218,29 @@ def load_tab(path):
             fields = line.strip().split(';')
             # name, version, path, hashes
             if len(fields) != 4:
+                # raise <instance ImportError>
                 raise ImportError("wrong number of fields at line %d" % lineno)
             name, version, path, hashes = fields
             # name
             if not check_libname(name):
+                # raise <instance ImportError>
                 raise ImportError("wrong library name at line %d" % lineno)
             # version
             version = parse_version(version)
             if version is None:
+                # raise <instance ImportError>
                 raise ImportError("wrong version format at line %d" % lineno)
             # path
             path = os.path.abspath(base64.b64decode(path))
             # hashes
             hashes = parse_hashes(hashes)
             if hashes is None:
+                # raise <instance ImportError>
                 raise ImportError("wrong hash format at line %d" % lineno)
             # update tab
             mod_vers = _tab.setdefault(name, {})
             if version in mod_vers:
+                # raise <instance ImportError>
                 raise ImportError("duplicated library: %r %d.%d.%d"
                                   % (name, version[0], version[1], version[2]))
             mod_vers[version] = {'path': path, 'hash': hashes}
@@ -179,13 +259,30 @@ def importlib(name, version=None, lazy=0, _reload=0):
                 otherwise it load it. If _reload is true load library anse save
                 it in cache
     """
+    # name = <str>
+    # version = <NoneType>
+    # lazy = <int>
+    # _reload = <int>
+    # desc = <tuple>
+    # fdir = <str>
+    # fname = <str>
+    # fobj = <file>
+    # hs_maker = <function>
+    # hval = <str>
+    # mod = <NoneType>
+    # mod_info = {<function>: <str>}
+    # path = <str>
+    # vers = <NoneType>
+    # return <instance load._LazyModule>
     name = str(name)
     vers = _TAB.get(name, None)
     if vers is None:
+        # raise <instance ImportError>
         raise ImportError("library %r not found" % name)
     if version is None:
         version = max(vers.iterkeys())
     elif version not in vers:
+        # raise <instance ImportError>
         raise ImportError("library %r %r not found" % (name, version))
     if not _reload and (name, version) in _CACHE:
         return _CACHE[(name, version)]
@@ -199,10 +296,13 @@ def importlib(name, version=None, lazy=0, _reload=0):
             fdir, fname = os.path.split(path)
             for hs_maker, hval in mod_info['hash'].iteritems():
                 if get_hash(path, hs_maker) != hval:
+                    # raise <instance ImportError>
                     raise ImportError("module %r %r in %r don't match hash %r"
                                       % (name, version, path, hval))
+            # raise <instance ImportError>
             fobj, path, desc = imp.find_module(os.path.splitext(fname)[0],
                                                [fdir])
+            # raise <instance ImportError>
             mod = imp.load_module(name, fobj, path, desc)
             _CACHE[(name, version)] = mod
             return mod
@@ -212,7 +312,15 @@ def importlib(name, version=None, lazy=0, _reload=0):
 
 def make_line(path, name, version):
     """Makes a complete string for loader's file"""
-    # name, version, path, hashes
+    # path = <str>
+    # name = <str>
+    # version = (*<int>)
+    # hashes = [<str>]
+    # hs_func = <function>
+    # hs_name = <str>
+    # path64 = <str>
+    # vs = <int>
+    # return <str>
     path = os.path.abspath(path)
     path64 = base64.b64encode(path)
     name = str(name)
