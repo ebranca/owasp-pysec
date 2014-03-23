@@ -17,3 +17,6 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
+from pysec.core import (memory,
+                        monotonic,
+                        unistd)

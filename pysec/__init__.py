@@ -18,3 +18,12 @@
 #
 # -*- coding: ascii -*-
 """PySec is a set of tools for secure application development under Linux"""
+from pysec import (alg,
+                   core,
+                   io,
+                   kv,
+                   load,
+                   log,
+                   utils,
+                   xsplit)
+                    

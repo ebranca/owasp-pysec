@@ -17,4 +17,6 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-from kyoto import KyotoKV
+from pysec.kv.kv import *
+from pysec.kv import (kyoto,
+                      rotkv)
