@@ -27,7 +27,7 @@ MIN_FDS = 64
 
 
 def ino_check(dev, min_ino=MIN_INODES):
-    return os.statvfs(dev).f_ffree >= int(min_ino)
+    return os.fstatvfs(dev).f_ffree >= int(min_ino)
 
 
 def size_check(size):
@@ -35,7 +35,7 @@ def size_check(size):
 
 
 def space_check(dev, size):
-    stdev = os.statvfs(dev)
+    stdev = os.fstatvfs(dev)
     return size < stdev.f_bfree * stdev.f_bsize
 
 

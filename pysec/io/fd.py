@@ -264,7 +264,7 @@ class File(FD):
         try:
             fd = fopen(fpath, mode)
             fd = File(fd)
-            if mode in _FO_NEW_MODES and not fcheck.ino_check(fd.device):
+            if mode in _FO_NEW_MODES and not fcheck.ino_check(int(fd)):
                 raise OSError("not enough free inodes")
         except:
             if fd > -1:
@@ -322,7 +322,7 @@ class File(FD):
             return
         dlen = len(data)
         dev = self.device
-        if not fcheck.space_check(dev, dlen):
+        if not fcheck.space_check(fd, dlen):
             raise OSError("not enough free space in device %r" % dev)
         wlen = 0
         while wlen < dlen:
@@ -349,7 +349,7 @@ class File(FD):
             return
         dlen = len(data)
         dev = self.device
-        if not fcheck.space_check(dev, dlen):
+        if not fcheck.space_check(fd, dlen):
             raise OSError("not enough free space in device %r" % dev)
         wlen = 0
         while wlen < dlen:
