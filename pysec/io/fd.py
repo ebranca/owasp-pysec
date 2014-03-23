@@ -364,7 +364,10 @@ class File(FD):
 
     def moveto(self, pos):
         """Move position pointer in position *pos* from start of FD."""
-        self.pos = int(pos)
+        pos = int(pos)
+        if pos < 0:
+            raise ValueError("invalid negative position: %d" % pos)
+        self.pos = pos
 
     def lines(self, start=None, stop=None, eol='\n', keep_eol=1):
         """Splits FD's content in lines that end with *eol*, it'll start from
