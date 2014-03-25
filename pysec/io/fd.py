@@ -174,32 +174,40 @@ class FD(object):
 
 
 ### Open modes for regular files
+# create a new file and raise error if it exists, use read mode
+FO_READNEW = 0
 # read only and raise error if it doesn't exists
-FO_READ = 0
-# creates a new file and raise error if it exists, use write mode
-FO_WRNEW = 1
+FO_READEX = 1
+# create a new file and raise error if it exists, use write mode
+FO_WRNEW = 2
 # open a file in write mode an existent file
-FO_WREX = 2
-# creates a new file and raise error if it exists, use append mode
-FO_APNEW = 3
+FO_WREX = 3
+# create a new file and raise error if it exists, use append mode
+FO_APNEW = 4
 # open a file in append mode an existent file
-FO_APEX = 4
+FO_APEX = 5
 
 
-_FO_NEW_MODES = FO_WRNEW, FO_APNEW
+_FO_NEW_MODES = FO_READNEW, FO_WRNEW, FO_APNEW
 
 
-FO_MODES = FO_READ, FO_WRNEW, FO_WREX, FO_APNEW, FO_APEX
+FO_MODES = FO_READNEW, FO_READEX, FO_WRNEW, FO_WREX, FO_APNEW, FO_APEX
 
 
-def _fo_read(fpath, _):
+def _fo_readnew(fpath, mode):
+    """Creates and open a regular file in read-only mode,
+    raises an error if it exists"""
+    return os.open(fpath, os.O_RDONLY | os.O_CREAT | os.O_EXCL, mode)
+
+
+def _fo_readex(fpath, _):
     """Opens a regular file in read-only mode,
     raises an error if it doesn't exists"""
     return os.open(fpath, os.O_RDONLY)
 
 
 def _fo_wrnew(fpath, mode):
-    """Opens a regular file in write-only,
+    """Creates and opens a regular file in write-only,
     raises an error if it exists"""
     return os.open(fpath, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
 
@@ -211,7 +219,7 @@ def _fo_wrex(fpath, _):
 
 
 def _fo_apnew(fpath, mode):
-    """Opens a regular file in append mode,
+    """Creates and opens a regular file in append mode,
     raises an error if it exists"""
     return os.open(fpath, os.O_WRONLY | os.O_APPEND |
                           os.O_CREAT | os.O_EXCL, mode)
@@ -223,7 +231,7 @@ def _fo_apex(fpath, _):
     return os.open(fpath, os.O_WRONLY | os.O_APPEND)
 
 
-_FOMODE2FUNC = _fo_read, _fo_wrnew, _fo_wrex, _fo_apnew, _fo_apex
+_FOMODE2FUNC = _fo_readnew, _fo_read, _fo_wrnew, _fo_wrex, _fo_apnew, _fo_apex
 
 
 class File(FD):
