@@ -20,7 +20,7 @@
 """Contains FD and FD-like classes for operations with file descriptors"""
 from pysec.core import unistd
 from pysec.xsplit import xlines
-from pysec.alg import knp_find
+from pysec.alg import knp_first
 from pysec.io import fcheck
 from pysec.utils import xrange
 import os
@@ -235,7 +235,7 @@ class File(FD):
 
     def __len__(self):
         """Returns file's size"""
-        return os.fstat(self.fd).st_size
+        return self.size
 
     def __getitem__(self, index):
         if isinstance(index, int):
@@ -369,13 +369,13 @@ class File(FD):
             raise ValueError("invalid negative position: %d" % pos)
         self.pos = pos
 
-    def lines(self, start=None, stop=None, eol='\n', keep_eol=1):
+    def lines(self, start=None, stop=None, eol='\n', keep_eol=0):
         """Splits FD's content in lines that end with *eol*, it'll start from
         *start* position and it'll stop at stop position, if *stop* is None it
         will stop at the end of FD. If keep_eol is true doesn't remove *eol*
         from the line"""
         start = self.pos if start is None else int(start)
-        return xlines(self, eol, keep_eol, start, stop, knp_find)
+        return xlines(self, eol, keep_eol, start, stop, knp_first)
 
     def chunks(self, size,  start=0, stop=None):
         """Divides FD's content in chunk of length *size* starting from *start*
