@@ -43,4 +43,4 @@ def monotonic():
     if clock_gettime(CLOCK_MONOTONIC, ctypes.pointer(t)) != 0:
         errno_ = ctypes.get_errno()
         raise OSError(errno_, os.strerror(errno_))
-    return t.tv_sec
+    return t.tv_sec * 1000000000 + t.tv_nsec

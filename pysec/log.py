@@ -19,7 +19,7 @@
 # -*- coding: ascii -*-
 """Log module"""
 from contextlib import contextmanager
-from time import time as get_time
+from time import time as _get_time
 import inspect
 from pysec.core.monotonic import monotonic
 
@@ -43,17 +43,21 @@ class LogError(Exception):
     """Error in log module"""
     pass
 
+    
+def get_time():
+    return int(_get_time()) * 1000000000
+
 
 class Logger(object):
     """Class to manage logging operations"""
 
-    def __init__(self, action, fields=None, parent=None, timer=get_time):
+    def __init__(self, action, fields=None, parent=None, timer=get_time, _offset=None):
         self.act = int(action)
         self.fields = {} if fields is None else dict(fields)
         self.parent = parent
         self.global_emits = []
         self.__local_emits = []
-        self._time_offset = monotonic()
+        self._time_offset = _offset or monotonic()
         self.start_time = int(timer if isinstance(timer, (int, long))
                               else timer())
 
@@ -67,13 +71,13 @@ class Logger(object):
 
     def subaction(self, action, fields=None):
         """Create un sublogger for the specified action"""
-        return Logger(action, fields, self, self.start_time)
+        return Logger(action, fields, self, self.start_time, self._time_offset)
 
     def actions(self):
         """Generator of all the actions from this logger to the root logger"""
         log = self
         while log:
-            yield log.action
+            yield log.act
             log = log.parent
 
     def all_fields(self):
@@ -168,8 +172,7 @@ def push_log(frame, action, fields=None):
         parent = log
     else:
         parent = get_log()
-    log = frame.f_locals['__log__'] = Logger(action, fields, parent,
-                                             parent.start_time)
+    log = frame.f_locals['__log__'] = parent.subaction(action, fields)
     return log
 
 
@@ -308,7 +311,7 @@ def register_error(name, code=None):
     """Registers the error in errors list, if code is None a free code will be
     used. Returns the error code"""
     if code is None:
-        code = min(-1, *ERRORS.keys()) + 1
+        code = max(-1, *ERRORS.keys()) + 1
     code = int(code)
     name = str(name).lower()
     if code < 0:
@@ -351,7 +354,7 @@ def register_action(name, code=None):
     """Registers the actions in actions list, if code is None a free code will
     be used. Returns the action code"""
     if code is None:
-        code = min(-1, *ACTIONS.keys()) + 1
+        code = max(-1, *ACTIONS.keys()) + 1
         if code < 0:
             code = 0
     code = int(code)
@@ -386,6 +389,21 @@ def get_action_name(code):
     """Get action name for this action code"""
     return ACTIONS[code]
 
+
+class _Actions(object):
+    """Utility class to create a actions handler object"""
+
+    def __getattr__(self, name):
+        name = str(name).lower()
+        code = ACT_NAMES.get(name, None)
+        if code is None:
+            raise AttributeError("error %r not found" % name)
+        return int(code)
+
+# Error handler object
+actions = _Actions()
+
+register_actions(**{'':0})
 
 # import default errors
 register_errors(**{

@@ -24,6 +24,6 @@ from pysec import (alg,
                    kv,
                    load,
                    log,
+                   net,
                    utils,
                    xsplit)
-                    
