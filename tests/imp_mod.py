@@ -39,6 +39,9 @@ import pysec.kv
 import pysec.kv.kv
 import pysec.kv.kyoto
 import pysec.kv.rotkv
+print "import pysec.net"
+import pysec.net
+import pysec.net.pop
 ### modules
 print "import pysec.alg..."
 import pysec.alg
