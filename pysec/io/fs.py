@@ -20,11 +20,12 @@
 """Utilities for File System operations"""
 from pysec.io import fd
 
+
 def get_fd_usage():
     """Returns a tuple
         (allocated file handles, vailable file handles, max file handles)
     """
-    with fd.File.open('/proc/sys/fs/file-nr', fd.FO_READ) as fnr:
+    with fd.File.open('/proc/sys/fs/file-nr', fd.FO_READEX) as fnr:
         line = fnr.readline()
         fields = line.strip().split()
         if len(fields) != 3:

@@ -213,7 +213,7 @@ def load_tab(path):
     # return <NoneType>
     path = os.path.abspath(str(path))
     _tab = {}
-    with fd.File.open(path, fd.FO_READ) as ftab:
+    with fd.File.open(path, fd.FO_READEX) as ftab:
         for lineno, line in enumerate(ftab.lines()):
             fields = line.strip().split(';')
             # name, version, path, hashes
