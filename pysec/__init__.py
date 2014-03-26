@@ -27,3 +27,18 @@ from pysec import (alg,
                    net,
                    utils,
                    xsplit)
+
+
+_OPEN_MODES = {
+    'r': io.fd.FO_READEX,
+    'rb': io.fd.FO_READEX,
+    'w': io.fd.FO_WRITETR,
+    'w+': io.fd.FO_WRITE,
+    'a': io.fd.FO_APPEND
+}
+
+def open(path, mode='r'):
+    mode = _OPEN_MODES.get(str(mode), None)
+    if mode is None:
+        raise ValueError("unknown open mode %r" % mode)
+    return io.fd.File.open(path, mode]
