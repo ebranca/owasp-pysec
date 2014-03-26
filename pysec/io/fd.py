@@ -180,12 +180,14 @@ FO_READNEW = 0
 FO_READEX = 1
 # create a new file and raise error if it exists, use write mode
 FO_WRNEW = 2
-# open a file in write mode an existent file
+# open a existing file in write mode
 FO_WREX = 3
+# open a existing file in write mode and truncate it
+FO_WREXTR = 4
 # create a new file and raise error if it exists, use append mode
-FO_APNEW = 4
-# open a file in append mode an existent file
-FO_APEX = 5
+FO_APNEW = 5
+# open a existing file in append mode
+FO_APEX = 6
 
 
 _FO_NEW_MODES = FO_READNEW, FO_WRNEW, FO_APNEW
@@ -217,6 +219,12 @@ def _fo_wrex(fpath, _):
     raises an error if it doesn't exists"""
     return os.open(fpath, os.O_WRONLY)
 
+    
+def _fo_wrextr(fpath, _):
+    """Opens a regular file in write-only mode and truncates it,
+    raises an error if it doesn't exists"""
+    return os.open(fpath, os.O_WRONLY | os.O_TRUNC)
+    
 
 def _fo_apnew(fpath, mode):
     """Creates and opens a regular file in append mode,
@@ -231,7 +239,7 @@ def _fo_apex(fpath, _):
     return os.open(fpath, os.O_WRONLY | os.O_APPEND)
 
 
-_FOMODE2FUNC = _fo_readnew, _fo_read, _fo_wrnew, _fo_wrex, _fo_apnew, _fo_apex
+_FOMODE2FUNC = _fo_readnew, _fo_readex, _fo_wrnew, _fo_wrex, _fo_apnew, _fo_apex
 
 
 class File(FD):
