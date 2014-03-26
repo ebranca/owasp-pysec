@@ -407,6 +407,19 @@ class File(FD):
                 wlen += _wlen
                 _tries = tries
 
+    @write_check
+    def truncate(self, length=0):
+        """Truncate the file and if the pointer is in a inexistent part of file
+        it will be moved to the end of file."""
+        fd = int(self)
+        length = int(length)
+        if length < 0:
+            raise ValueError("negative length: %r" % length)
+        size = self.size
+        os.ftruncate(fd, length)
+        if size > length:
+            self.moveto(length)
+
     def moveto(self, pos):
         """Move position pointer in position *pos* from start of FD."""
         pos = int(pos)
