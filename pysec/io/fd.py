@@ -188,12 +188,19 @@ FO_WREXTR = 4
 FO_APNEW = 5
 # open a existing file in append mode
 FO_APEX = 6
+# open the file in read-only mode, if it doesn't exist create it
+FO_READ = 7
+# open the file in write-only mode, if it doesn't exist create it
+FO_WRITE = 8
+# open the file in append mode, if it doesn't exist create it
+FO_APPEND = 9
 
 
-_FO_NEW_MODES = FO_READNEW, FO_WRNEW, FO_APNEW
+_FO_NEW_MODES = FO_READNEW, FO_WRNEW, FO_APNEW, FO_READ, FO_WRITE, FO_APPEND
 
 
-FO_MODES = FO_READNEW, FO_READEX, FO_WRNEW, FO_WREX, FO_APNEW, FO_APEX
+FO_MODES = FO_READNEW, FO_READEX, FO_WRNEW, FO_WREX, FO_WREXTR, \
+           FO_APNEW, FO_APEX, FO_READ, FO_WRITE, FO_APPEND
 
 
 def _fo_readnew(fpath, mode):
@@ -239,7 +246,29 @@ def _fo_apex(fpath, _):
     return os.open(fpath, os.O_WRONLY | os.O_APPEND)
 
 
-_FOMODE2FUNC = _fo_readnew, _fo_readex, _fo_wrnew, _fo_wrex, _fo_apnew, _fo_apex
+def _fo_read(fpath, mode):
+    """Opens a regular file in read-only mode,
+    if it doesn't exist a new file will be created"""
+    return os.open(fpath, os.O_RDONLY | os.O_CREAT, mode)
+
+
+def _fo_write(fpath, mode):
+    """Opens a regular file in write-only mode,
+    if it doesn't exist a new file will be created"""
+    return os.open(fpath, os.O_WRONLY | os.O_CREAT, mode)
+
+
+def _fo_append(fpath, mode):
+    """Opens a regular file in append mode,
+    if it doesn't exist a new file will be created"""
+    return os.open(fpath, os.O_APPEND | os.O_CREAT, mode)
+
+
+FO_READNEW, FO_READEX, FO_WRNEW, FO_WREX, FO_WREXTR, \
+           FO_APNEW, FO_APEX, FO_READ, FO_WRITE, FO_APPEND
+
+_FOMODE2FUNC = _fo_readnew, _fo_readex, _fo_wrnew, _fo_wrex, _fo_wrextr, \
+               _fo_apnew, _fo_apex, _fo_read, _fo_write, _fo_append
 
 
 class File(FD):
