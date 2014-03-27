@@ -40,3 +40,6 @@ def open(path, mode='r'):
     if mode is None:
         raise ValueError("unknown open mode %r" % mode)
     return io.fd.File.open(path, mode)
+
+
+xrange = utils.xrange
