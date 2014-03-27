@@ -30,10 +30,8 @@ from pysec import (alg,
 
 
 _OPEN_MODES = {
-    'r': io.fd.FO_READEX,
-    'rb': io.fd.FO_READEX,
-    'w': io.fd.FO_WRITETR,
-    'w+': io.fd.FO_WRITE,
+    'r': io.fd.FO_READ,
+    'w': io.fd.FO_WRITE,
     'a': io.fd.FO_APPEND
 }
 
@@ -41,4 +39,4 @@ def open(path, mode='r'):
     mode = _OPEN_MODES.get(str(mode), None)
     if mode is None:
         raise ValueError("unknown open mode %r" % mode)
-    return io.fd.File.open(path, mode]
+    return io.fd.File.open(path, mode)
