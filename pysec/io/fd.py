@@ -245,13 +245,13 @@ def _fo_apnew(fpath, mode):
 def _fo_apex(fpath, _):
     """Opens a regular file in append mode,
     raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_APPEND | os.O_APPEND)
+    return os.open(fpath, os.O_APPEND)
 
 
 def _fo_apextr(fpath, _):
     """Opens a regular file in append mode and truncates it,
     raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_APPEND | os.O_APPEND)
+    return os.open(fpath, os.O_APPEND | os.O_TRUNC)
 
 
 def _fo_read(fpath, mode):
