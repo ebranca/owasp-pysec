@@ -238,8 +238,7 @@ def _fo_wrextr(fpath, _):
 def _fo_apnew(fpath, mode):
     """Creates and opens a regular file in append mode,
     raises an error if it exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_APPEND |
-                          os.O_CREAT | os.O_EXCL, mode)
+    return os.open(fpath, os.O_APPEND | os.O_CREAT | os.O_EXCL, mode)
 
 
 def _fo_apex(fpath, _):
