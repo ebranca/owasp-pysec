@@ -22,6 +22,7 @@ from contextlib import contextmanager
 from time import time as _get_time
 import inspect
 from pysec.core.monotonic import monotonic
+from pysec.io import fd
 
 EVENT_START = 0
 EVENT_SUCCESS = 1
@@ -542,3 +543,19 @@ class _Errors(object):
 
 # Error handler object
 errors = _Errors()
+
+
+def save_errors(path):
+    """Write all the errors in a new file *path*. Write an error code and
+    an error name's per line"""
+    with fd.File.open(path, fd.FO_APNEW) as ferr:
+        for errcode, errname in ERRORS.iteritems():
+            ferr.write('%d,%r\n' % (errcode, errname))
+
+
+def save_actions(path):
+    """Write all the actions in a new file *path*. Write an error code and
+    an error name's per line"""
+    with fd.File.open(path, fd.FO_APNEW) as ferr:
+        for errcode, errname in ACTIONS.iteritems():
+            ferr.write('%d,%r\n' % (errcode, errname))
