@@ -68,7 +68,7 @@ def write_check(func):
     """Decorator to control write permission in writer methods"""
     def _write(fd, *args, **kargs):
         """*func* wrapped with write check"""
-        if fd.flags & os.O_WRONLY:
+        if fd.flags & os.O_WRONLY or fd.flags & os.O_APPEND:
             return func(fd, *args, **kargs)
         raise NotWriteableFD(fd)
     return _write
@@ -238,19 +238,19 @@ def _fo_wrextr(fpath, _):
 def _fo_apnew(fpath, mode):
     """Creates and opens a regular file in append mode,
     raises an error if it exists"""
-    return os.open(fpath, os.O_APPEND | os.O_CREAT | os.O_EXCL, mode)
+    return os.open(fpath, os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_EXCL, mode)
 
 
 def _fo_apex(fpath, _):
     """Opens a regular file in append mode,
     raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_APPEND)
+    return os.open(fpath, os.O_WRONLY | os.O_APPEND)
 
 
 def _fo_apextr(fpath, _):
     """Opens a regular file in append mode and truncates it,
     raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_APPEND | os.O_TRUNC)
+    return os.open(fpath, os.O_WRONLY | os.O_APPEND | os.O_TRUNC)
 
 
 def _fo_read(fpath, mode):
@@ -268,14 +268,14 @@ def _fo_write(fpath, mode):
 def _fo_append(fpath, mode):
     """Opens a regular file in append mode,
     if it doesn't exist a new file will be created"""
-    return os.open(fpath, os.O_APPEND | os.O_CREAT, mode)
+    return os.open(fpath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, mode)
 
 
 FO_READNEW, FO_READEX, FO_WRNEW, FO_WREX, FO_WREXTR, \
            FO_APNEW, FO_APEX, FO_READ, FO_WRITE, FO_APPEND
 
 _FOMODE2FUNC = _fo_readnew, _fo_readex, _fo_wrnew, _fo_wrex, _fo_wrextr, \
-               _fo_apnew, _fo_apex, _fo_read, _fo_write, _fo_append
+               _fo_apnew, _fo_apex, _fo_apextr,_fo_read, _fo_write, _fo_append
 
 
 class File(FD):
