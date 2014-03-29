@@ -545,17 +545,15 @@ class _Errors(object):
 errors = _Errors()
 
 
-def save_errors(path):
+def save_errors(ferr):
     """Write all the errors in a new file *path*. Write an error code and
     an error name's per line"""
-    with fd.File.open(path, fd.FO_APNEW) as ferr:
-        for errcode, errname in ERRORS.iteritems():
-            ferr.write('%d,%r\n' % (errcode, errname))
+    for errcode, errname in ERRORS.iteritems():
+        ferr.write('%d,%r\n' % (errcode, errname))
 
 
-def save_actions(path):
-    """Write all the actions in a new file *path*. Write an error code and
-    an error name's per line"""
-    with fd.File.open(path, fd.FO_APNEW) as ferr:
-        for errcode, errname in ACTIONS.iteritems():
-            ferr.write('%d,%r\n' % (errcode, errname))
+def save_actions(fact):
+    """Write all the actions in a new file *path*. Write an action code and
+    an action name's per line"""
+    for actcode, actname in ACTIONS.iteritems():
+        fact.write('%d,%r\n' % (actcode, actname))
