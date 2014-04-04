@@ -38,6 +38,14 @@ import hashlib
 import base64
 from types import ModuleType
 from pysec.io import fd
+from pysec import log
+
+
+__name__ = 'pysec.load'
+
+
+# set actions
+log.register_actions('LOAD_TAB', 'IMPORT_LIB')
 
 
 ASCII_LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -198,6 +206,7 @@ class _LazyModule(ModuleType):
         delattr(self.module or importlib(self.name, self.version), name)
 
 
+@log.wrap(log.actions.LOAD_TAB, fields=('path',), lib=__name__)
 def load_tab(path):
     """Updates internal tab of modules"""
     # path = <str>
@@ -247,6 +256,9 @@ def load_tab(path):
     _TAB.update(_tab)
 
 
+@log.wrap(log.actions.IMPORT_LIB,
+          fields=('name', 'version', 'lazy', '_reload'),
+          result='module', lib=__name__)
 def importlib(name, version=None, lazy=0, _reload=0):
     """Load a library and return it.
     name        library's name
