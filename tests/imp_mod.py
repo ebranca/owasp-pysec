@@ -17,6 +17,9 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
+print "==========="
+print "IMPORT TEST"
+print "==========="
 print "import pysec..."
 import pysec
 ### packages
