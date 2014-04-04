@@ -24,6 +24,7 @@ import inspect
 from pysec.core.monotonic import monotonic
 from pysec.io import fd
 
+
 EVENT_START = 0
 EVENT_SUCCESS = 1
 EVENT_WARNING = 2
@@ -52,7 +53,7 @@ def get_time():
 class Logger(object):
     """Class to manage logging operations"""
 
-    def __init__(self, action, fields=None, parent=None, timer=get_time, _offset=None):
+    def __init__(self, action, fields=None, parent=None, timer=get_time, lib=None, _offset=None):
         self.act = int(action)
         self.fields = {} if fields is None else dict(fields)
         self.parent = parent
@@ -61,18 +62,19 @@ class Logger(object):
         self._time_offset = _offset or monotonic()
         self.start_time = int(timer if isinstance(timer, (int, long))
                               else timer())
+        self.lib = None if lib is None else str(lib)
 
-    def add_global_emit(self, emiter):
-        """Add an emiter for this logger and for its offspring"""
-        self.global_emits.append(emiter)
+    def add_global_emit(self, emitter):
+        """Add an emitter for this logger and for its offspring"""
+        self.global_emits.append(emitter)
 
-    def add_local_emit(self, emiter):
-        """Add an emiter only for this logger"""
-        self.__local_emits.append(emiter)
+    def add_local_emit(self, emitter):
+        """Add an emitter only for this logger"""
+        self.__local_emits.append(emitter)
 
-    def subaction(self, action, fields=None):
+    def subaction(self, action, fields=None, lib=None):
         """Create un sublogger for the specified action"""
-        return Logger(action, fields, self, self.start_time, self._time_offset)
+        return Logger(action, fields, self, self.start_time, lib, self._time_offset)
 
     def actions(self):
         """Generator of all the actions from this logger to the root logger"""
@@ -89,61 +91,20 @@ class Logger(object):
             log = log.parent
 
     def log(self, event, errcode, info):
-        """Emit a log event and call all emiter listening for this logger"""
+        """Emit a log event and call all emitter listening for this logger"""
         time = self.start_time + (monotonic() - self._time_offset)
         log = self
+        lib = self.lib
         while log:
             actions = tuple(self.actions())
             fields = {}
             for fds in self.all_fields():
                 fields.update(fds)
-            for emiter in log.__local_emits:
-                emiter(event, time, actions, int(errcode), fields, info)
-            for emiter in log.global_emits:
-                emiter(event, time, actions, int(errcode), fields, info)
+            for emitter in log.__local_emits:
+                emitter(event, time, actions, int(errcode), fields, info, lib)
+            for emitter in log.global_emits:
+                emitter(event, time, actions, int(errcode), fields, info, lib)
             log = log.parent
-
-    def action(self, action=None, info=None, res_hdl=None,
-               ex_hdl=None, reraise=1):
-        """Decorator to wrap a function that run a action"""
-        def _action(fun):
-            def __action(*args, **kwds):
-                log = self if action is None else self.subaction(action, info)
-                try:
-                    log.start()
-                    res = res_hdl(fun(*args, **kwds))
-                    log.success(**res)
-                except Exception, ex:
-                    log.error(*ex_hdl(ex))
-                    if reraise:
-                        raise
-                finally:
-                    log.end()
-            return __action
-        return _action
-
-    @contextmanager
-    def ctx(self, action, info=None):
-        """Create a context to tun the action, it will call log.start() before
-        the block code execution, and log.end() after the end of block code
-        execution"""
-        log = self.subaction(action, info)
-        if info is None:
-            info = {}
-        start()
-        yield log
-        end()
-
-    def wrap(self, action):
-        """Wrap the function with a log context, as in Logger.ctx()"""
-        def _wrap(fun):
-            """Returns *fun* wrapped"""
-            def __wrap(*args, **kwargs):
-                with self.ctx(action) as log:
-                    kwargs['log'] = log
-                    fun(*args, **kwargs)
-            return __wrap
-        return _wrap
 
     def __enter__(self):
         start()
@@ -164,7 +125,7 @@ def start_log(action, fields=None, timer=get_time):
     frame.f_locals['__log__'] = Logger(action, fields, None, timer)
 
 
-def push_log(frame, action, fields=None):
+def push_log(frame, action, fields=None, lib=None):
     """Create a new __log__ variable in the caller frame and init it with a
     Logger object"""
     frame = frame.f_back
@@ -173,7 +134,7 @@ def push_log(frame, action, fields=None):
         parent = log
     else:
         parent = get_log()
-    log = frame.f_locals['__log__'] = parent.subaction(action, fields)
+    log = frame.f_locals['__log__'] = parent.subaction(action, fields, lib)
     return log
 
 
@@ -246,12 +207,12 @@ def critical(errcode, **info):
 
 
 def add_global_emit(emit):
-    """Add a global emiter to current logger"""
+    """Add a global emitter to current logger"""
     get_log().add_global_emit(emit)
 
 
 def add_local_emit(emit):
-    """Add a local emiter to current logger"""
+    """Add a local emitter to current logger"""
     get_log().add_local_emit(emit)
 
 
@@ -265,7 +226,7 @@ def ctx(action, fields=None):
     pop_log(inspect.currentframe().f_back)
 
 
-def wrap(action, fields=(), result=None, err_hdl=None, lib=0):
+def wrap(action, fields=(), result=None, err_hdl=None, lib=None):
     """Wrap and create a logging context with current logger"""
     if result is not None:
         result = str(result)
@@ -278,10 +239,10 @@ def wrap(action, fields=(), result=None, err_hdl=None, lib=0):
                 log.error(errcode, **info)
             Otherwise calls log.success() and returns the value."""
             kwds = inspect.getcallargs(fun, *args, **kwargs)
-            if get_log(lib):
-                push_log(inspect.currentframe(),
-                         action,
-                         {key: kwds[key] for key in fields if key in kwds})
+            if get_log(not lib):
+                push_log(inspect.currentframe(), action,
+                         {key: kwds[key] for key in fields if key in kwds},
+                         lib)
                 try:
                     start()
                     val = fun(**kwds)
@@ -557,3 +518,18 @@ def save_actions(fact):
     an action name's per line"""
     for actcode, actname in ACTIONS.iteritems():
         fact.write('%d,%r\n' % (actcode, actname))
+
+
+# simple emitter
+def print_emitter(event, time, actions, errcode, fields, info, lib):
+    if lib:
+        return
+    actions = '<%s>' % ', '.join(get_action_name(act) for act in actions)
+    if event in (EVENT_WARNING, EVENT_ERROR, EVENT_CRITICAL):
+        print '[%s] (%d) %r ERR:%r %r %r' % (EVENT_NAMES[event], time,
+                                             actions,
+                                             get_error_name(errcode),
+                                             fields, info)
+    else:
+        print '[%s] (%d) %r %r %r' % (EVENT_NAMES[event], time,
+                                      actions, fields, info)
