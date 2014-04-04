@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env sh
 # Python Security Project (PySec) and its related class files.
 #
 # PySec is a set of tools for secure application development under Linux
@@ -16,8 +16,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-# -*- coding: ascii -*-
-import pysec
-print "=== TEST IMPORT PySec ==="
-import imp_mod
+
+python -B ./imp_mod.py
+echo
+python -B ./log_test.py
