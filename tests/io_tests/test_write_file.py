@@ -16,7 +16,7 @@ import pysec.io.fs
 import pysec.io.temp
 
 FILE_SIZE = 4096
-FILE_NAME = "/tmp/pysec_test"
+FILE_NAME = "/tmp/pysec_write_test"
 
 # This test writes random data to a file, then reads it using standard API and compares results
 # If any errors occur the test displays a "FAILED" message
@@ -38,7 +38,7 @@ def main():
 			sys.stdout.write("FAILED\n")
 			return
 	sys.stdout.write("PASSED\n")
-	os.remove(FILE_NAME);
 	
 if __name__ == "__main__":
 	main()
+	os.remove(FILE_NAME);
