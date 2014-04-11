@@ -23,8 +23,12 @@ from pysec.xsplit import xlines
 from pysec.alg import knp_first
 from pysec.io import fcheck
 from pysec.utils import xrange
+from pysec import log
 import os
 import fcntl
+
+
+__name__ = 'pysec.io.fd'
 
 
 class Error(Exception):
@@ -278,6 +282,11 @@ _FOMODE2FUNC = _fo_readnew, _fo_readex, _fo_wrnew, _fo_wrex, _fo_wrextr, \
                _fo_apnew, _fo_apex, _fo_apextr,_fo_read, _fo_write, _fo_append
 
 
+log.register_actions('REGFILE_OPEN', 'REGFILE_READ', 'REGFILE_WRITE',
+                     'REGFILE_PREAD', 'REGFILE_PWRITE', 'REGFILE_MOVE',
+                     'REGFILE_TRUNC')
+
+
 class File(FD):
     """File represents a Regular File's file descriptor."""
 
@@ -302,6 +311,8 @@ class File(FD):
         raise IndexError('wrong index type: %s' % type(index))
 
     @staticmethod
+    @log.wrap(log.actions.REGFILE_OPEN,
+              fields=('fpath', 'oflag', 'mode'), lib=__name__)
     def open(fpath, oflag, mode=0666):
         """Open a file descript for a regular file in fpath using the open mode
         specifie by *oflag* with *mode*"""
@@ -339,10 +350,11 @@ class File(FD):
                 os.close(fd)
 
     @read_check
-    def read(self, size=None):
+    @log.wrap(log.actions.REGFILE_READ, fields=('size', 'pos'), lib=__name__)
+    def read(self, size=None, pos=None):
         """Read *pos*-length data starting from position *pos*."""
         size = int(self.size) if size is None else int(size)
-        pos = int(self.pos)
+        pos = int(self.pos if pos is None else pos)
         if size < 0:
             raise ValueError("invalid size, %d" % size)
         chunk = unistd.pread(self.fd, size, pos)
@@ -350,25 +362,27 @@ class File(FD):
         return chunk
 
     @read_check
-    def pread(self, size, pos):
+    @log.wrap(log.actions.REGFILE_PREAD, fields=('size', 'pos'), lib=__name__)
+    def pread(self, size, pos=None):
         """Read *pos*-length data starting from position *pos*.
         This operation doesn't change the pointer position."""
         size = int(size)
-        pos = int(pos)
+        pos = int(self.pos if pos is None else pos)
         if size < 0:
             raise ValueError("invalid size, %d" % size)
         chunk = unistd.pread(self.fd, size, pos)
         return chunk
 
     @write_check
-    def write(self, data, tries=3):
+    @log.wrap(log.actions.REGFILE_WRITE, fields=('data', 'pos'), lib=__name__)
+    def write(self, data, pos=None, tries=3):
         """Write data starting from position *pos* and do maximum *tries*
         write attempt, if all will fail it raises a IncompleteWrite
         exception. This operation moves the position pointer at end of written
         data."""
         fd = int(self)
         _tries = tries = int(tries)
-        pos = int(self.pos)
+        pos = int(self.pos if pos is None else pos)
         data = str(data)
         if not data:
             return
@@ -389,13 +403,14 @@ class File(FD):
         self.pos = pos + wlen
 
     @write_check
-    def pwrite(self, data, pos, tries=3):
+    @log.wrap(log.actions.REGFILE_READ, fields=('data', 'pos'), lib=__name__)
+    def pwrite(self, data, pos=None, tries=3):
         """Write data starting from position *pos* and do maximum *tries*
         write attempt, if all will fail it raises a IncompleteWrite
         exception. This operation doesn't change the pointer position."""
         fd = int(self)
         _tries = tries = int(tries)
-        pos = int(pos)
+        pos = int(self.pos if pos is None else pos)
         data = str(data)
         if not data:
             return
@@ -415,6 +430,7 @@ class File(FD):
                 _tries = tries
 
     @write_check
+    @log.wrap(log.actions.REGFILE_TRUNC, fields=('length',), lib=__name__)
     def truncate(self, length=0):
         """Truncate the file and if the pointer is in a inexistent part of file
         it will be moved to the end of file."""
@@ -427,6 +443,7 @@ class File(FD):
         if size > length:
             self.moveto(length)
 
+    @log.wrap(log.actions.REGFILE_MOVE, fields=('pos',), lib=__name__)
     def moveto(self, pos):
         """Move position pointer in position *pos* from start of FD."""
         pos = int(pos)
