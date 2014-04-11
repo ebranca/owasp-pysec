@@ -20,6 +20,15 @@
 import os
 import kv
 import kyotocabinet as kyoto
+from pysec import log
+
+
+__name__ = 'pysec.kv.kyoto'
+
+
+log.register_actions('KYOTOKV_NEW', 'KYOTOKV_SET', 'KYOTOKV_GET',
+                     'KYOTOKV_DEL', 'KYOTOKV_CLEAR', 'KYOTOKV_POP',
+                     'KYOTOKV_UPDATE', 'KYOTOKV_CLOSE')
 
 
 _OPEN_MODE = kyoto.DB.OWRITER | kyoto.DB.OREADER | kyoto.DB.OCREATE
@@ -27,6 +36,7 @@ _OPEN_MODE = kyoto.DB.OWRITER | kyoto.DB.OREADER | kyoto.DB.OCREATE
 
 class KyotoKV(kv.HardKV):
 
+    @log.wrap(log.actions.KYOTOKV_NEW, fields=('path',), lib=__name__)
     def __init__(self, path, parse=lambda v: v, unparse=lambda v: v):
         self.fk = kyoto.DB()
         if not self.fk.open(path, _OPEN_MODE):
@@ -34,6 +44,7 @@ class KyotoKV(kv.HardKV):
         self.parse = parse
         self.unparse = unparse
 
+    @log.wrap(log.actions.KYOTOKV_CLOSE, lib=__name__)
     def close(self):
         self.fk.close()
 
@@ -46,16 +57,19 @@ class KyotoKV(kv.HardKV):
             raise self.fk.error()
         return count
 
+    @log.wrap(log.actions.KYOTOKV_GET, fields=('key',), lib=__name__)
     def __getitem__(self, key):
         value = self.fk.get(self.parse(key))
         if value is None:
             raise self.fk.error()
         return self.unparse(value)
 
+    @log.wrap(log.actions.KYOTOKV_SET, fields=('key', 'value'), lib=__name__)
     def __setitem__(self, key, value):
         if not self.fk.set(self.parse(key), self.parse(value)):
             raise self.fk.error()
 
+    @log.wrap(log.actions.KYOTOKV_DEL, fields=('key',), lib=__name__)
     def __delitem__(self, key):
         if not self.fk.remove(self.parse(key)):
             raise self.fk.error()
@@ -77,6 +91,7 @@ class KyotoKV(kv.HardKV):
     def size(self):
         return os.stat(self.fk.path()).st_size
 
+    @log.wrap(log.actions.KYOTOKV_CLEAR, lib=__name__)
     def clear(self):
         self.fk.clear()
 
@@ -87,6 +102,7 @@ class KyotoKV(kv.HardKV):
     def fromkeys(seq, value=None):
         raise NotImplementedError
 
+    @log.wrap(log.actions.KYOTOKV_GET, fields=('key',), lib=__name__)
     def get(self, key, default=None):
         value = self.fk.get(self.parse(key))
         return default if value is None else self.unparse(value)
@@ -124,11 +140,13 @@ class KyotoKV(kv.HardKV):
     def iterkeys(self):
         return iter(self)
 
+    @log.wrap(log.actions.KYOTOKV_POP, fields=('key',), lib=__name__)
     def pop(self, key):
         value = self[key]
         self.fk.remove(self.parse(key))
         return value
 
+    @log.wrap(log.actions.KYOTOKV_POP, lib=__name__)
     def popitem(self):
         item = self.fk.shift()
         if item is None:
@@ -139,6 +157,7 @@ class KyotoKV(kv.HardKV):
         key = self.parse(key)
         return self[key] if self.fk.add(key, self.parse(default)) else default
 
+    @log.wrap(log.actions.KYOTOKV_UPDATE, lib=__name__)
     def update(self, **other):
         parse = self.parse
         self.fk.set_bulks(((parse(k), parse(v))
