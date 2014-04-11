@@ -42,6 +42,13 @@ class HardKV(KV):
         """Close persistent object"""
         raise NotImplementedError
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+        return 0
+
 
 _NO_KEY = object()
 
