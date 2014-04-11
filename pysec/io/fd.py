@@ -78,9 +78,13 @@ def write_check(func):
     return _write
 
 
+log.register_actions('FD_NEW', 'FD_CLOSE')
+
+
 class FD(object):
     """FD represents a File Descriptor"""
 
+    @log.wrap(log.actions.FD_NEW, fields=('fd',), lib=__name__)
     def __init__(self, fd):
         fd = int(fd)
         if fd < 0:
@@ -102,6 +106,7 @@ class FD(object):
         self.close()
         return 0
 
+    @log.wrap(log.actions.FD_CLOSE, fields=('path',), lib=__name__)
     def close(self):
         """Closes file descriptor"""
         unistd.close(self.fd)
