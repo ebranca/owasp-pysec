@@ -22,7 +22,6 @@ from contextlib import contextmanager
 from time import time as _get_time
 import inspect
 from pysec.core.monotonic import monotonic
-from pysec.io import fd
 
 
 EVENT_START = 0
@@ -522,8 +521,6 @@ def save_actions(fact):
 
 # simple emitter
 def print_emitter(event, time, actions, errcode, fields, info, lib):
-    if lib:
-        return
     actions = '<%s>' % ', '.join(get_action_name(act) for act in actions)
     if event in (EVENT_WARNING, EVENT_ERROR, EVENT_CRITICAL):
         print '[%s] (%d) %r ERR:%r %r %r' % (EVENT_NAMES[event], time,
