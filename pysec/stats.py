@@ -17,30 +17,24 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-"""PySec is a set of tools for secure application development under Linux"""
-from pysec import (alg,
-                   core,
-                   io,
-                   kv,
-                   load,
-                   log,
-                   net,
-                   stats,
-                   utils,
-                   xsplit)
+"""Module with statistics utilities."""
 
 
-_OPEN_MODES = {
-    'r': io.fd.FO_READ,
-    'w': io.fd.FO_WRITE,
-    'a': io.fd.FO_APPEND
-}
-
-def open(path, mode='r'):
-    mode = _OPEN_MODES.get(str(mode), None)
-    if mode is None:
-        raise ValueError("unknown open mode %r" % mode)
-    return io.fd.File.open(path, mode)
+__all__ = 'avg',
 
 
-xrange = utils.xrange
+def avg():
+    """Generator to calculate arithmetic mean"""
+    avg = el = (yield .0)
+    if el is None:
+        yield .0
+        raise StopIteration
+    n = .0
+    while 1:
+        n += 1
+        el = (yield avg)
+        if el is None:
+            yield avg
+            raise StopIteration
+        el = float(el)
+        avg = (avg + el / n) / ((n + 1) / n)
