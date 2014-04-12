@@ -6,6 +6,18 @@ import errno
 from pysec.core import memory
 from pysec.xsplit import xbounds
 from pysec.net.error import TooBigReply, TooManyFlushData
+from pysec import log
+
+__name__ = 'pysec.net.smtp'
+
+# set actions
+log.register_actions('SMTP_NEW_SESSION',
+                      'SMTP_CONNECT',
+                      'SMTP_CLOSE',
+                      'SMTP_FLUSH',
+                      'SMTP_CMD',
+                      'SMTP_PUTCMD',
+                      'SMTP_REPLY')
 
 EOL = '\r\n'
 
@@ -63,7 +75,11 @@ def smtplines(fd, bufsize, timeout):
 
 class SMTP_Session(object):
 
-    def __init__(self, host, port=SMTP_PORT, timeout=60, bufsize=4096, maxflush=4096):
+    @log.wrap(log.actions.SMTP_NEW_SESSION,
+              fields=('host', 'port', 'timeout', 'bufsize', 'maxflush'),
+              lib=__name__)
+    def __init__(self, host, port=SMTP_PORT, timeout=60,
+                 bufsize=4096, maxflush=4096):
         self.host = str(host)
         self.port = int(port)
         self.bufsize = int(bufsize)
@@ -74,6 +90,7 @@ class SMTP_Session(object):
         self.lines = smtplines(self.sock.fileno(), self.bufsize, self.timeout)
         self.maxflush = int(maxflush)
 
+    @log.wrap(log.actions.SMTP_REPLY, result='reply', lib=__name__)
     def get_reply(self):
         line = self.lines.next()
         code = line[:3]
@@ -83,7 +100,6 @@ class SMTP_Session(object):
                 yield line
                 if line[3:4] == ' ' or not line:
                     break
-                   
 
     @property
     def is_open(self):
@@ -92,11 +108,13 @@ class SMTP_Session(object):
     @property
     def can_read(self):
         return bool(select.select((self.sock.fileno(),), (), (), 0)[0])
-                
+
+    @log.wrap(log.actions.SMTP_CONNECT, lib=__name__)
     def connect(self):
         self.sock.connect((self.host, self.port))
         return self.get_reply()
 
+    @log.wrap(log.actions.SMTP_CLOSE, lib=__name__)
     def close(self):
         sock = self.sock
         try:
@@ -116,14 +134,17 @@ class SMTP_Session(object):
                 raise TooManyFlushData()
             yield self.sock.recv(self.bufsize)
 
+    @log.wrap(log.actions.SMTP_FLUSH, lib=__name__)
     def flush_all(self):
         for _ in self.flush():
             pass
 
+    @log.wrap(log.actions.SMTP_PUTCMD, fields=('cmd', 'args'), lib=__name__)
     def putcmd(self, cmd, args=None):
         self.sock.sendall('%s%s%s' % (cmd, ' ' if args is None
                                                else ' %s ' % args, EOL))
 
+    @log.wrap(log.actions.SMTP_CMD, fields=('cmd', 'args'), lib=__name__)
     def cmd(self, cmd, args=None):
         self.flush_all()
         cmd = str(cmd).upper()
