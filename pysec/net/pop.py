@@ -18,14 +18,27 @@
 #
 # -*- coding: ascii -*-
 """Implementations of POP protocols"""
-import socket
-import select
-from functools import partial
 import errno
-
+from functools import partial
+import select
+import socket
 from pysec.core import memory
 from pysec.xsplit import xbounds
 from pysec.net.error import TooBigReply, TooManyFlushData
+from pysec import log
+
+__name__ = 'pysec.net.pop'
+
+# set actions
+log.register_actions('POP3_NEW_SESSION',
+                      'POP3_CONNECT',
+                      'POP3_CLOSE',
+                      'POP3_FLUSH',
+                      'POP3_CMD',
+                      'POP3_PUTCMD',
+                      'POP3_SIMPLEREPLY',
+                      'POP3_MULREPLY')
+
 
 EOL = '\r\n'
 MULTI_END = '.%s' % EOL
@@ -80,6 +93,9 @@ def poplines(fd, bufsize, timeout):
 
 class POP3_Session(object):
 
+    @log.wrap(log.actions.POP3_NEW_SESSION,
+              fields=('host', 'port', 'timeout', 'bufsize', 'maxflush'),
+              lib=__name__)
     def __init__(self, host, port=POP3_PORT, timeout=60,
                  bufsize=4096, maxflush=4096):
         self.host = str(host)
@@ -92,9 +108,11 @@ class POP3_Session(object):
         self.lines = poplines(self.sock.fileno(), self.bufsize, self.timeout)
         self.maxflush = int(maxflush)
 
+    @log.wrap(log.actions.POP3_SIMPLEREPLY, result='reply', lib=__name__)
     def get_reply(self):
         return self.lines.next()
 
+    @log.wrap(log.actions.POP3_MULREPLY, result='reply', lib=__name__)
     def get_multi_reply(self):
         for line in self.lines:
             if line == MULTI_END:
@@ -114,6 +132,7 @@ class POP3_Session(object):
         self.sock.connect((self.host, self.port))
         return self.get_reply()
 
+    @log.wrap(log.actions.POP3_CLOSE, lib=__name__)
     def close(self):
         sock = self.sock
         try:
@@ -133,14 +152,17 @@ class POP3_Session(object):
                 raise TooManyFlushData()
             yield self.sock.recv(self.bufsize)
 
+    @log.wrap(log.actions.POP3_FLUSH, lib=__name__)
     def flush_all(self):
         for _ in self.flush():
             pass
 
+    @log.wrap(log.actions.POP3_PUTCMD, fields=('cmd', 'args'), lib=__name__)
     def putcmd(self, cmd, args=None):
         self.sock.sendall('%s%s%s' % (cmd, ' ' if args is None
                                                else ' %s ' % args, EOL))
 
+    @log.wrap(log.actions.POP3_CMD, fields=('cmd', 'args'), lib=__name__)
     def cmd(self, cmd, args=None):
         self.flush_all()
         cmd = str(cmd).upper()
