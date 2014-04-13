@@ -20,3 +20,11 @@
 from pysec.core import (memory,
                         monotonic,
                         unistd)
+
+
+class Object(object):
+    pass
+
+
+class Error(Object, Exception):
+    pass

@@ -3,7 +3,7 @@ import select
 from functools import partial
 import errno
 
-from pysec.core import memory
+from pysec.core import memory, Object
 from pysec.xsplit import xbounds
 from pysec.net.error import TooBigReply, TooManyFlushData
 from pysec import log
@@ -73,7 +73,7 @@ def smtplines(fd, bufsize, timeout):
         mend -= rem
 
 
-class SMTP_Session(object):
+class SMTP_Session(Object):
 
     @log.wrap(log.actions.SMTP_NEW_SESSION,
               fields=('host', 'port', 'timeout', 'bufsize', 'maxflush'),

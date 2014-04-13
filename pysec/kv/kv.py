@@ -18,13 +18,14 @@
 #
 # -*- coding: ascii -*-
 from types import DictType
+from pysec.core import Object
 
 
 __all__ = 'KV', 'SoftKV', 'HardKV', 'HybridKV'
 
 
 
-class KV(DictType):
+class KV(Object, DictType):
     pass
 
 
@@ -50,7 +51,7 @@ class HardKV(KV):
         return 0
 
 
-_NO_KEY = object()
+_NO_KEY = Object()
 
 
 class HybridKV(HardKV, SoftKV):

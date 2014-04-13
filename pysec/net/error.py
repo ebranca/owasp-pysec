@@ -18,14 +18,15 @@
 #
 # -*- coding: ascii -*-
 """Exceptions for network errors"""
+from pysec.core import Error
 
 
-class TooBigReply(Exception):
+class TooBigReply(Error):
     """Raise this exception when have a reply bigger than your application
     limits"""
     pass
 
 
-class TooManyFlushData(Exception):
+class TooManyFlushData(Error):
     """Raise this exception when there are too many data useless"""
     pass

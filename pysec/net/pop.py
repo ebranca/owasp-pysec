@@ -22,7 +22,7 @@ import errno
 from functools import partial
 import select
 import socket
-from pysec.core import memory
+from pysec.core import memory, Object
 from pysec.xsplit import xbounds
 from pysec.net.error import TooBigReply, TooManyFlushData
 from pysec import log
@@ -91,7 +91,7 @@ def poplines(fd, bufsize, timeout):
         mend -= rem
 
 
-class POP3_Session(object):
+class POP3_Session(Object):
 
     @log.wrap(log.actions.POP3_NEW_SESSION,
               fields=('host', 'port', 'timeout', 'bufsize', 'maxflush'),

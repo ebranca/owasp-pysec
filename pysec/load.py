@@ -37,6 +37,7 @@ import os
 import hashlib
 import base64
 from types import ModuleType
+from pysec.core import Object
 from pysec.io import fd
 from pysec import log
 
@@ -171,7 +172,7 @@ _CACHE = {}
 _TAB = {}
 
 
-class _LazyModule(ModuleType):
+class _LazyModule(Object, ModuleType):
     """_LazyModule is a module that instances their attribute in lazy mode"""
     # instance.module = <NoneType>|<module>
     # instance.name = <str>

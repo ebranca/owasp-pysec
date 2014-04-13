@@ -18,7 +18,7 @@
 #
 # -*- coding: ascii -*-
 """Contains FD and FD-like classes for operations with file descriptors"""
-from pysec.core import unistd
+from pysec.core import Error, Object,unistd
 from pysec.xsplit import xlines
 from pysec.alg import knp_first
 from pysec.io import fcheck
@@ -31,25 +31,25 @@ import fcntl
 __name__ = 'pysec.io.fd'
 
 
-class Error(Exception):
+class FDError(Error):
     """Generic error for fd module"""
 
     def __init__(self, fd):
-        super(Error, self).__init__()
+        super(FDError, self).__init__()
         self.fd = int(fd)
 
 
-class NotReadableFD(Error):
+class NotReadableFD(FDError):
     """Raise when try to read a no-readable fd"""
     pass
 
 
-class NotWriteableFD(Error):
+class NotWriteableFD(FDError):
     """Raise when try to write a no-writeable fd"""
     pass
 
 
-class IncompleteWrite(Error):
+class IncompleteWrite(FDError):
     """Raise when write operation was not successfully
     performed"""
 
@@ -81,7 +81,7 @@ def write_check(func):
 log.register_actions('FD_NEW', 'FD_CLOSE')
 
 
-class FD(object):
+class FD(Object):
     """FD represents a File Descriptor"""
 
     @log.wrap(log.actions.FD_NEW, fields=('fd',), lib=__name__)

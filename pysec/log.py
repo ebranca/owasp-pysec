@@ -21,6 +21,7 @@
 from contextlib import contextmanager
 from time import time as _get_time
 import inspect
+from pysec.core import Object
 from pysec.core.monotonic import monotonic
 
 
@@ -49,7 +50,7 @@ def get_time():
     return int(_get_time()) * 1000000000
 
 
-class Logger(object):
+class Logger(Object):
     """Class to manage logging operations"""
 
     def __init__(self, action, fields=None, parent=None, timer=get_time, lib=None, _offset=None):
@@ -351,7 +352,7 @@ def get_action_name(code):
     return ACTIONS[code]
 
 
-class _Actions(object):
+class _Actions(Object):
     """Utility class to create a actions handler object"""
 
     def __getattr__(self, name):
@@ -491,7 +492,7 @@ register_errors(**{
 })
 
 
-class _Errors(object):
+class _Errors(Object):
     """Utility class to create a errors handler object"""
 
     def __getattr__(self, name):
