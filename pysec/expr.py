@@ -42,7 +42,6 @@ class Expression(Object):
     If *func* is None, *values* will be the value of the expression.
     If *func* is not None, *values* must be a tuple to pass to *func* as
     arguments.
-    The value of expression
     """
 
     def __init__(self, values, func=None):
@@ -50,8 +49,6 @@ class Expression(Object):
         self.func = func
 
     def compute(self, **kwds):
-        """If *self.func* is None returns the
-        """
         values = self.values
         func = self.func
         if func is None:
