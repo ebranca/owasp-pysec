@@ -24,12 +24,12 @@ Example:
 
     x = variable()
     expr = x * 2
-    expr(x=2)
+    expr.compute(x=2)
     # 4
     expr = x * 100 + 1 < 12 * y
-    expr(x=-1, y=10)
+    expr.compute(x=-1, y=10)
     # True
-    expr(x=1, y=1)
+    expr.compute(x=1, y=1)
     # False
 
 """
@@ -38,12 +38,20 @@ from pysec.core import Object
 
 
 class Expression(Object):
+    """Expression represents a expression.
+    If *func* is None, *values* will be the value of the expression.
+    If *func* is not None, *values* must be a tuple to pass to *func* as
+    arguments.
+    The value of expression
+    """
 
     def __init__(self, values, func=None):
         self.values = values
         self.func = func
 
     def compute(self, **kwds):
+        """If *self.func* is None returns the
+        """
         values = self.values
         func = self.func
         if func is None:
