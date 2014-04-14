@@ -54,7 +54,7 @@ class Expression(Object):
         if func is None:
             return values.compute(**kwds) if isinstance(values, Expression) else values
         else:
-            return func(*((val.compute(**kwds) if isinstance(val, Expression) else val) for val in values))
+            return func(*tuple((val.compute(**kwds) if isinstance(val, Expression) else val) for val in values))
 
     def __lt__(self, other):
         return Expression((self, other), operator.lt)
@@ -90,7 +90,7 @@ class Expression(Object):
         return Expression((self, other), operator.and_)
 
     def __div__(self, other):
-        return Expression((self,), operator.div)
+        return Expression((self, other), operator.div)
 
     def __floordiv__(self, other):
         return Expression((self, other), operator.floordiv)
