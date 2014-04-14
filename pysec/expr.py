@@ -37,6 +37,12 @@ import operator
 from pysec.core import Object
 
 
+__all__ = 'Expression', 'var', 'const'
+
+
+# TODO - method to get a representation of the expression
+
+
 class Expression(Object):
     """Expression represents a expression.
     If *func* is None, *values* will be the value of the expression.
@@ -232,3 +238,4 @@ class VarMaker(Object):
 
         
 var = VarMaker()
+const = lambda val: Expression(val, None)
