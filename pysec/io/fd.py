@@ -368,10 +368,10 @@ class File(FD):
 
     @read_check
     @log.wrap(log.actions.REGFILE_PREAD, fields=('size', 'pos'), lib=__name__)
-    def pread(self, size, pos=None):
+    def pread(self, size=None, pos=None):
         """Read *pos*-length data starting from position *pos*.
         This operation doesn't change the pointer position."""
-        size = int(size)
+        size = int(self.size) if size is None else int(size)
         pos = int(self.pos if pos is None else pos)
         if size < 0:
             raise ValueError("invalid size, %d" % size)
