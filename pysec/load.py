@@ -44,6 +44,8 @@ from pysec import log
 
 __name__ = 'pysec.load'
 
+__all__ = 'load_tab', 'import_lib', 'make_line'
+
 
 # set actions
 log.register_actions('LOAD_TAB', 'IMPORT_LIB')
