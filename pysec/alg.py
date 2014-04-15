@@ -20,7 +20,10 @@
 from itertools import islice
 
 
-def knp(source, pattern, start, stop):
+__all__ = 'knp', 'knp_first', 'knp_find'
+
+
+def knp(source, pattern, start=0, stop=None):
     """Yields all oocurrencies of pattern in source[start:stop]"""
     shifts = [1] * (len(pattern) + 1)
     shift = 1
@@ -41,16 +44,15 @@ def knp(source, pattern, start, stop):
             yield start
 
 
-def knp_first(source, pattern, start, stop):
+def knp_first(source, pattern, start=0, stop=None):
     # XXX check if duplicate knp() code is much faster than generator creation
     try:
         return knp(source, pattern, start, stop).next()
     except StopIteration:
         return -1
-        
 
 
-def knp_find(source, pattern, start, stop):
+def knp_find(source, pattern, start=0, stop=None):
     """Returns a true value if find the pattern in source"""
     for index in knp(source, pattern, start, stop):
         return 1
