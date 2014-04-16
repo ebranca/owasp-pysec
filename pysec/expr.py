@@ -215,6 +215,9 @@ class Expression(Object):
     def __ixor__(self, other):
         return Expression((self, other), operator.ixor)
 
+    def __len__(self):
+        return Expression((self, other), operator.len)
+
 
 class Variable(Expression):
 
