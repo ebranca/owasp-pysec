@@ -57,6 +57,10 @@ NO_CHECK = Object()
 
 
 class CheckError(Error):
+    pass
+
+
+class CheckRuleError(Error, ValueError):
 
     def __init__(self, check, values):
         self.check = check
