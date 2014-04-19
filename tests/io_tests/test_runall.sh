@@ -4,5 +4,5 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 for test_py in `(ls $DIR/*.py)`
 do
-	python $test_py
+    python $test_py
 done
