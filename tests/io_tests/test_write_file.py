@@ -13,7 +13,7 @@ import pysec.io.fs
 import pysec.io.temp
 
 FILE_SIZE = 4096
-FILE_NAME = '/tmp/pysec_write_test'
+FILE_NAME = '/tmp/__pysec_write_test.tmp'
 
 
 def main():
