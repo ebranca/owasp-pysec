@@ -18,5 +18,4 @@
 #
 # -*- coding: ascii -*-
 from pysec.kv.kv import *
-from pysec.kv import (kyoto,
-                      rotkv)
+from pysec.kv.simple import SimpleKV
