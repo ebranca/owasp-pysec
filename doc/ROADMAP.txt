@@ -207,7 +207,7 @@ Utility
 |---------------------|-----------------|---------------|--------------|
 | Process-exec        | MIME            | SSL-ASN1      | File-entropy |
 | Process-multi-sync  | String-patterns | SSL-ciphers   | Fuzzy-hash   |
-| Process-multy-async | Binary-patterns | Network-core  | Random-test  |
+| Process-multi-async | Binary-patterns | Network-core  | Random-test  |
 |                     | JSON            | Net-errcode |              |
 |                     | YAML            | DNS           |              |
 |                     | CSV             |               |              |
