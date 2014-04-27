@@ -368,7 +368,7 @@ Utility
 |            |        |           | SSL-analyzer           |
 |            |        |           | SSH-analyzer           |
 |            |        |           | Socket-gif-hack        |
-|            |        |           | PCI-DSS-v2-analyzer    |
+|            |        |           | PCI-DSS-analyzer       |
 |            |        |           | Modules-Repository     |
 |            |        |           | Hash-PyPI-modules      |
 |            |        |           | Image-entropy          |
