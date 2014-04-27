@@ -1,4 +1,3 @@
-
 ############################################################################
 # Software Roadmap                                                         #
 ############################################################################
@@ -9,10 +8,12 @@ Code will be developed following the concept of "software stack".
 Reference: http://en.wikipedia.org/wiki/Solution_stack
 
 Definition - What does Software Stack mean?
-"A software stack is a group of programs that work in tandem to produce a result or achieve a common goal."
+"A software stack is a group of programs that work in tandem to produce a 
+result or achieve a common goal."
 ( http://www.techopedia.com/definition/27268/software-stack )
 
-Libraries and functions are based on a stack system where the lower layer is "Layer 0" and the highest layer is "Layer 6" consisting of a total of 7 software layers.
+Libraries and functions are based on a stack system where the lower layer is "Layer 0" 
+and the highest layer is "Layer 6" consisting of a total of 7 software layers.
 
 Layer 0 (Lower level calls dealing directly with OS or Hardware)
  |--> Layer 1 (layer 1 functions depend on layer 0 functions)
@@ -28,9 +29,11 @@ Each layer is divided in four classes divided as follow:
 3) Network: functions dealing with network operations
 4) Utility: components aggregating functions to execute complex tasks
 
-We are planning to develop around 150 components to cover the most basic features needed for current operations in information security.
+We are planning to develop around 150 components to cover the most basic features
+needed for current operations in information security.
 
-The following table outlines the expected distribution of components divided by level and by class.
+The following table outlines the expected distribution of components divided
+by level and by class.
 
 |---------|----------|------|---------|---------|-------|
 | Planned Component in each layer by class              |
@@ -48,7 +51,8 @@ The following table outlines the expected distribution of components divided by 
 |  Total  |    36    |  19  |   35    |   43    |  133  |
 |---------|----------|------|---------|---------|-------|
 
-To further clarify how the code base is developed we think is beneficial to provide a one-line description of each planned component.
+To further clarify how the code base is developed we think is beneficial to 
+provide a one-line description of each planned component.
 
 ############################################################################
 # Layer 0 - Component Details                                              #
