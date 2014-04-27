@@ -208,7 +208,7 @@ Utility
 | Process-exec        | MIME            | SSL-ASN1      | File-entropy |
 | Process-multi-sync  | String-patterns | SSL-ciphers   | Fuzzy-hash   |
 | Process-multi-async | Binary-patterns | Network-core  | Random-test  |
-|                     | JSON            | Net-errcode |              |
+|                     | JSON            | Net-errcode   |              |
 |                     | YAML            | DNS           |              |
 |                     | CSV             |               |              |
 |                     | On-disk-dicts   |               |              |
