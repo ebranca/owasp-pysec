@@ -23,18 +23,19 @@
 __all__ = 'avg',
 
 
-def avg():
+def avg(*values):
     """Generator to calculate arithmetic mean"""
-    avg = el = (yield .0)
-    if el is None:
-        yield .0
-        raise StopIteration
-    n = .0
+    n = -1.
+    tot = .0
+    for n, el in enumerate(values):
+        tot += el
+    n += 1.
+    avg = 0 if n == 0. else tot/n
     while 1:
-        n += 1
         el = (yield avg)
         if el is None:
-            yield avg
-            raise StopIteration
+            continue
         el = float(el)
         avg = (avg + el / n) / ((n + 1) / n)
+        n += 1
+
