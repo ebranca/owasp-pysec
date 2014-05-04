@@ -136,7 +136,7 @@ def _hash(path, hs_obj):
     # chunk = <str>
     # fmod = <file>
     # return <NoneType>
-    with fd.File.open(path, 'rb') as fmod:
+    with fd.File.open(path, fd.FO_READEX) as fmod:
         chunk = fmod.read(4096)
         while chunk:
             hs_obj.update(chunk)
