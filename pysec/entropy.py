@@ -22,7 +22,7 @@ from types import DictType
 
 from pysec.core import Object
 
-__all__ = 'Entropy', 'ent_byte'
+__all__ = 'Entropy', 'ent_bytes'
 
 
 class Entropy(DictType):
