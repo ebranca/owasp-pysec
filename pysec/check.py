@@ -70,10 +70,6 @@ class CheckRuleError(Error, ValueError):
         return str(self.check)
 
 
-def do_check(check, value):
-    raise NotImplementedError
-
-
 def check(*rules, **parsers):
     def _check(func):
         def __check(*args, **kwds):
@@ -96,3 +92,25 @@ def check(*rules, **parsers):
             return func(**kwds)
         return __check
     return _check
+
+
+def result(*rules):
+    def _result(func):
+        def __result(*args, **kwds):
+            res = func(*args, **kwds)
+            for rule in rules:
+                if isinstance(rule, Expression):
+                    if not rule.compute(x=res):
+                        raise CheckError(rule, kwds)
+                elif isinstance(rule, tuple):
+                    for rl in rule:
+                        if isinstance(rl, Expression):
+                            if not rl.compute(x=res):
+                                raise CheckError(rl, kwds)
+                        else:
+                            raise TypeError("wrong subrule's type %r" % type(rl))
+                else:
+                    raise TypeError("wrong rule's type %r" % type(rule))
+        return __result
+    return _result
+
