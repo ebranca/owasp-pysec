@@ -18,7 +18,7 @@
 #
 # -*- coding: ascii -*-
 """Contains FD and FD-like classes for operations with file descriptors"""
-from pysec.core import Error, Object,unistd
+from pysec.core import Error, Object, unistd
 from pysec.xsplit import xlines
 from pysec.alg import knp_first
 from pysec.io import fcheck
@@ -476,9 +476,32 @@ class File(FD):
 
 
 class Directory(FD):
-    """File represents a Regular File's file descriptor."""
-    pass
+    """Directory represents a Directory's file descriptor."""
 
+    def __init__(self, fd):
+        super(self.__class__, self).__init__(fd)
+        """pos field is unused but might be useful if we implement __getitem__ in the future"""
+        self.pos = 0
+
+    @staticmethod
+    def open(path):
+        """Open a file descriptor for a directory path using read-only mode. We keep a copy of the 
+        directory path within the object for future reference. The object created will keep a file
+        descriptor opened for the corresponding directory until close or destructor is called"""
+        fd = -1
+        try:
+            fd = unistd.opendir(path)
+            fd = Directory(fd)
+            fd.path = path
+        except:
+            if fd > -1:
+                os.close(fd)
+            raise
+        return fd
+
+    def readdir(self):
+        """Return a list of files and subdirectories contained in the current directory"""
+        return unistd.readdir(self.fd)
 
 class Socket(FD):
     """File represents a Socket's file descriptor."""
