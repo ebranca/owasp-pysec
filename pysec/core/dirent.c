@@ -116,7 +116,7 @@ dirent_readdir(PyObject* self, PyObject* args, PyObject* kwds)
             goto error;
         }
     } while(entry);
-    
+
     rewinddir(dirp);
     if (closedir(dirp) == -1) {
         Py_DECREF(list);
@@ -128,6 +128,7 @@ error:
     Py_XDECREF(tuple);
     Py_XDECREF(ino);
     Py_XDECREF(name);
+    rewinddir(dirp);
     if (closedir(dirp) == -1) {
         PyErr_Warn(PyExc_IOError, "Error: closedir() failed");
     }
