@@ -20,7 +20,6 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -1051,74 +1050,6 @@ unistd_read(PyObject* self, PyObject* args, PyObject* kwds)
     return res;
 }
 
-
-PyDoc_STRVAR(unistd_opendir__doc__,
-"");
-/* TODO - doc */
-
-static PyObject*
-unistd_opendir(PyObject* self, PyObject* args, PyObject* kwds)
-{
-    char *path;
-    int fd;
-    PyObject *res;
-    static char *kwlist[] = {"path", NULL};
-    if(!PyArg_ParseTupleAndKeywords(args, kwds, "s:opendir", kwlist,
-                                    &path))
-        return NULL;
-
-    fd = open(path, O_RDONLY);
-    if (fd == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
-    }
-
-    res = Py_BuildValue("i", fd);
-    return res;
-}
-
-PyDoc_STRVAR(unistd_readdir__doc__,
-"");
-/* TODO - doc */
-
-static PyObject*
-unistd_readdir(PyObject* self, PyObject* args, PyObject* kwds)
-{
-    int fd;
-    struct dirent *entry;
-    PyObject *res = PyList_New(0);
-    DIR *dir;
-    static char *kwlist[] = {"fd", NULL};
-    if(!PyArg_ParseTupleAndKeywords(args, kwds, "i:readdir", kwlist,
-                                    &fd))
-        return NULL;
-
-    fd = dup(fd);
-    if (fd == -1) {
-        return PyErr_SetFromErrno(PyExc_IOError);
-    }
-    dir = fdopendir(fd);
-    if (dir == NULL) {
-        return PyErr_SetFromErrno(PyExc_IOError);
-    }
-
-    do {
-        errno = 0;
-        entry = readdir(dir);
-        if (entry == NULL && errno) {
-            return PyErr_SetFromErrno(PyExc_IOError);
-        }
-        if (entry) {
-            PyObject *item = PyString_FromStringAndSize(entry->d_name, strlen(entry->d_name));
-            PyList_Append(res, item);
-        }
-    } while (entry);
-
-    if (closedir(dir) == -1) {
-        // TODO - we should probably display a warning if this unlikely event occurs
-    }
-    return res;
-}
-
 PyDoc_STRVAR(unistd_pread__doc__,
 "");
 /* TODO - doc */
@@ -1276,8 +1207,7 @@ static PyMethodDef unistd_methods[] = {
     {"vfork", (PyCFunction)unistd_vfork, METH_KEYWORDS, unistd_vfork__doc__},
     {"write", (PyCFunction)unistd_write, METH_KEYWORDS, unistd_write__doc__},
     {"write", (PyCFunction)unistd_write, METH_KEYWORDS, unistd_write__doc__},
-    {"opendir", (PyCFunction)unistd_opendir, METH_KEYWORDS, unistd_opendir__doc__},
-    {"readdir", (PyCFunction)unistd_readdir, METH_KEYWORDS, unistd_readdir__doc__},
+
     {NULL}
 };
 
