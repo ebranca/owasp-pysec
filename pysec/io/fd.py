@@ -504,11 +504,15 @@ class Directory(FD):
         directory"""
         return set(dirent.readdir(self.fd))
 
-    def ls(self):
-        return tuple(name for _, name in self.readdir())
+    def ls(self, dot=0):
+        """Return a tuple containing the names of the entries in this directory.
+        If dot is true '.' and '..' will be include in the tuple."""
+        return tuple(name for _, name in self.readdir() if name != '.' and name != '..')
 
     def __iter__(self):
-        return iter(self.ls())
+        """Return a iterator of all names of direcotry's entries.
+        '.' and '..' are included."""
+        return (name for _, name in self.readdir())
 
 
 class Socket(FD):
