@@ -21,6 +21,7 @@ import math
 from types import DictType
 
 from pysec.core import Object
+from pysec import lang
 
 __all__ = 'Entropy', 'ent_bytes'
 
@@ -33,7 +34,7 @@ class Entropy(DictType):
         for sym, freq in freqs.iteritems():
             freq = int(freq)
             if freq < 0:
-                raise ValueError("wrong negative frequency: %d" % freq)
+                raise ValueError(lang.ENT_NEGATIVE_FREQ % freq)
             self[sym] = freq
             count += freq
         self.count = count
@@ -46,7 +47,7 @@ class Entropy(DictType):
         old_freq = self[symbol]
         freq = int(freq)
         if freq < 0:
-            raise ValueError("wrong negative frequency: %d" % freq)
+            raise ValueError(lang.ENT_NEGATIVE_FREQ % freq)
         super(Entropy, self).__setitem__(symbol, freq)
         self.count += freq - old_freq
 
@@ -60,7 +61,7 @@ class Entropy(DictType):
         h = 0
         base = int(base)
         if base < 2:
-            raise ValueError("wrong base value: %d" % base)
+            raise ValueError(lang.ENT_NEGATIVE_BASE % base)
         count = self.count
         for value in self.itervalues():
             if not value:
@@ -88,7 +89,7 @@ def ent_bytes(bytes, base=2):
         else:
             byte = str(byte)
             if len(byte) != 1:
-                raise ValueError("wrong byte value: %r" % byte)
+                raise ValueError(lang.ENT_WRONG_BYTE % byte)
         ent.increment(byte)
     return ent.entropy(base)
 

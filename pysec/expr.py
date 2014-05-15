@@ -34,7 +34,9 @@ Example:
 
 """
 import operator
+
 from pysec.core import Object
+from pysec import lang
 
 
 __all__ = 'Expression', 'var', 'const'
@@ -150,25 +152,25 @@ class Expression(Object):
         return Expression((self, other), operator.contains)
 
     def __delitem__(self, key):
-        return Expression((self, other), operator.delitem)
+        return Expression((self, key), operator.delitem)
 
     def __delslice__(self, key):
-        return Expression((self, other), operator.delslice)
+        return Expression((self, key), operator.delslice)
 
     def __getitem__(self, key):
-        return Expression((self, other), operator.getitem)
+        return Expression((self, key), operator.getitem)
 
     def __getslice__(self, key):
-        return Expression((self, other), operator.getslice)
+        return Expression((self, key), operator.getslice)
 
     def __repeat__(self):
         return Expression(self, operator.repeat)
 
     def __setitem__(self, key, value):
-        return Expression((self, other), operator.setitem)
+        return Expression((self, key, value), operator.setitem)
 
     def __setslice__(self, key, value):
-        return Expression((self, other), operator.setslice)
+        return Expression((self, key, value), operator.setslice)
 
     def __iadd__(self, other):
         return Expression((self, other), operator.iadd)
@@ -215,8 +217,6 @@ class Expression(Object):
     def __ixor__(self, other):
         return Expression((self, other), operator.ixor)
 
-    def __len__(self):
-        return Expression((self, other), operator.len)
 
 
 class Variable(Expression):
@@ -237,7 +237,7 @@ class VarMaker(Object):
         name = str(name)
         if name[:1].isalpha() and ((not name[1:]) or name[1:].isalnum()):
             return Variable(name)
-        raise ValueError("wrong variable's name")
+        raise ValueError(lang.EXPR_WRONG_VAR_NAME % name)
 
         
 var = VarMaker()

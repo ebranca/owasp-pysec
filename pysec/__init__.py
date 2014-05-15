@@ -23,6 +23,7 @@ from pysec import (alg,
                    entropy,
                    expr,
                    io,
+                   lang,
                    kv,
                    load,
                    log,
@@ -38,10 +39,11 @@ _OPEN_MODES = {
     'a': io.fd.FO_APPEND
 }
 
+
 def open(path, mode='r'):
     mode = _OPEN_MODES.get(str(mode), None)
     if mode is None:
-        raise ValueError("unknown open mode %r" % mode)
+        raise ValueError(lang.WRONG_OPEN_MODE % mode)
     return io.fd.File.open(path, mode)
 
 
