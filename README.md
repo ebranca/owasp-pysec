@@ -22,12 +22,30 @@ Prerequisites
     - debian -> apt-get install python-dev (as root)
 + zlib
 	- ubuntu -> sudo apt-get install  zlib1g-dev
+
+### Optional ###
+
 + [Kyoto Cabinet](http://fallabs.com/kyotocabinet/pkg/kyotocabinet-1.2.76.tar.gz "Kyoto Cabinet")
 + [Kyoto Cabinet for Python 2.x](http://fallabs.com/kyotocabinet/pythonlegacypkg/kyotocabinet-python-legacy-1.18.tar.gz "Kyoto Cabinet for Python 2.7")
 
 
 Install
 -------
+
+    git clone https://github.com/ebranca/owasp-pysec.git
+    cd owasp-pysec/
+    python2.7 setup.py install
+    
+
+Test
+----
+
+    cd tests/
+    python runall.py
+
+
+Optional
+--------
 
 ### Kyoto Cabinet
 
@@ -46,21 +64,6 @@ Install
 	cd kyotocabinet-python-legacy-1.18/
 	python setup.py install
 	ln -s /usr/local/lib/libkyotocabinet.so* /usr/lib/
-
-    
-    
-
-### PySec
-    git clone https://github.com/ebranca/owasp-pysec.git
-    cd owasp-pysec/
-    python2.7 setup.py install
-    
-
-Test
-----
-
-    cd tests/
-    python runall.py
 
 
 Links
