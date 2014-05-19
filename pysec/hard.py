@@ -18,13 +18,16 @@
 #
 # -*- coding: ascii -*-
 """Utilities for disk ADT or operation"""
+import os.path
+import struct
+
 from pysec.io import fd
 
 
 def hcounter(fpath):
     """Make a file in fpath where store the last state of the counter."""
     fpath = os.path.abspath(fpath)
-    with fd.File.open(flast, fd.FO_WRITE) as fwr:
+    with fd.File.open(fpath, fd.FO_WRITE) as fwr:
         if fwr.size:
             with fd.File.open(fpath, fd.FO_READ) as frd:
                 index = struct.unpack('!Q', frd[:8])[0]
