@@ -18,6 +18,7 @@
 #
 # -*- coding: ascii -*-
 WRONG_OPEN_MODE = "unknown open mode %r"
+WRONG_ONE_CHAR_STRING = "wrong 1-char string: %r"
 
 LOG_ALREADY_SET = "Log already set"
 LOG_NOT_STARTED = "Log not started"

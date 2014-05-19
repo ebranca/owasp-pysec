@@ -25,6 +25,7 @@ __all__ = 'set_lang',
 _default = 'en_US'
 
 WRONG_OPEN_MODE = "unknown open mode %r"
+WRONG_ONE_CHAR_STRING = "wrong 1-char string: %r"
 
 LANG_LOCALE_NOT_FOUND = "locale %r not found"
 

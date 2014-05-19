@@ -17,7 +17,8 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-WRONG_OPEN_MODE = "unknown open mode %r"
+WRONG_OPEN_MODE = "modalita' d'apertura non conosciuta: %r"
+WRONG_ONE_CHAR_STRING = "stringa da un carattere invalida: %r"
 
 LOG_ALREADY_SET = "Log gia' presente"
 LOG_NOT_STARTED = "Log non iniziato"
