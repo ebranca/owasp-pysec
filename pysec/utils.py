@@ -112,3 +112,8 @@ def top_n(values, first_n=10):
     for val in values:
         heapq.heappushpop(top, val)
     return top
+
+
+def clamp(val, min_val, max_val):
+    return min_val if val < min_val else (max_val if val > max_val else val)
+
