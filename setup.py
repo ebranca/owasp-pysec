@@ -25,6 +25,7 @@ packages = [
     'pysec.core',
     'pysec.io',
     'pysec.kv',
+    'pysec.lang',
     'pysec.net',
 ]
 

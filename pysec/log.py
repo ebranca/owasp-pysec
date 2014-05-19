@@ -23,6 +23,7 @@ from time import time as _get_time
 import inspect
 from pysec.core import Object
 from pysec.core.monotonic import monotonic
+from pysec import lang
 
 
 EVENT_START = 0
@@ -121,7 +122,7 @@ def start_log(action, fields=None, timer=get_time):
     """This function must be called when you want start logging"""
     frame = inspect.currentframe().f_back
     if frame.f_locals.get('__log__', None):
-        raise LogError("log already set")
+        raise LogError(lang.LOG_ALREADY_SET)
     frame.f_locals['__log__'] = Logger(action, fields, None, timer)
 
 
@@ -147,7 +148,7 @@ def pop_log(frame):
             frame.f_locals['__log__'] = log.parent
             return log
         frame = frame.f_back
-    raise LogError("no log started")
+    raise LogError(lang.LOG_NOT_STARTED)
 
 
 def get_log(exc=1):
@@ -161,7 +162,7 @@ def get_log(exc=1):
             return log
         frame = frame.f_back
     if exc:
-        raise LogError("no log started")
+        raise LogError(lang.LOG_NOT_STARTED)
     return None
 
 
@@ -322,11 +323,11 @@ def register_action(name, code=None):
     code = int(code)
     name = str(name).lower()
     if code < 0:
-        raise ValueError("invalid negative integer as action code: %d" % code)
+        raise ValueError(lang.LOG_NEGATIVE_ACT_CODE % code)
     if code in ACTIONS:
-        raise ValueError("code already present: %d" % code)
+        raise ValueError(lang.LOG_CODE_PRESENT % code)
     if name in ACT_NAMES:
-        raise ValueError("name already present: %r" % name)
+        raise ValueError(lang.LOG_NAME_PRESENT % name)
     ACTIONS[code] = name
     ACT_NAMES[name] = code
     return code
@@ -359,7 +360,7 @@ class _Actions(Object):
         name = str(name).lower()
         code = ACT_NAMES.get(name, None)
         if code is None:
-            raise AttributeError("error %r not found" % name)
+            raise AttributeError(lang.LOG_ERR_NOT_FOUND % name)
         return int(code)
 
 # Error handler object
@@ -499,7 +500,7 @@ class _Errors(Object):
         name = str(name).lower()
         code = ERR_NAMES.get(name, None)
         if code is None:
-            raise AttributeError("error %r not found" % name)
+            raise AttributeError(lang.LOG_ERR_NOT_FOUND % name)
         return int(code)
 
 # Error handler object

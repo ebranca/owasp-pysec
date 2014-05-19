@@ -51,6 +51,7 @@ import inspect
 
 from pysec.core import Object, Error
 from pysec.expr import Expression
+from pysec import lang
 
 
 NO_CHECK = Object()
@@ -86,9 +87,9 @@ def check(*rules, **parsers):
                             if not rl.compute(**kwds):
                                 raise CheckError(rl, kwds)
                         else:
-                            raise TypeError("wrong subrule's type %r" % type(rl))
+                            raise TypeError(lang.CHECK_WRONG_SUBRULE_TYPE % type(rl))
                 else:
-                    raise TypeError("wrong rule's type %r" % type(rule))
+                    raise TypeError(lang.CHECK_WRONG_RULE_TYPE % type(rule))
             return func(**kwds)
         return __check
     return _check
@@ -108,9 +109,9 @@ def result(*rules):
                             if not rl.compute(x=res):
                                 raise CheckError(rl, kwds)
                         else:
-                            raise TypeError("wrong subrule's type %r" % type(rl))
+                            raise TypeError(lang.CHECK_WRONG_SUBRULE_TYPE % type(rl))
                 else:
-                    raise TypeError("wrong rule's type %r" % type(rule))
+                    raise TypeError(lang.CHECK_WRONG_RULE_TYPE % type(rule))
         return __result
     return _result
 

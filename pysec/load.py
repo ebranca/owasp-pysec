@@ -37,9 +37,11 @@ import os
 import hashlib
 import base64
 from types import ModuleType
+
 from pysec.core import Object
 from pysec.io import fd
 from pysec import log
+from pysec import lang
 
 
 __name__ = 'pysec.load'
@@ -231,29 +233,29 @@ def load_tab(path):
             # name, version, path, hashes
             if len(fields) != 4:
                 # raise <instance ImportError>
-                raise ImportError("wrong number of fields at line %d" % lineno)
+                raise ImportError(lang.LOAD_WRONG_FIELDS % lineno)
             name, version, path, hashes = fields
             # name
             if not check_libname(name):
                 # raise <instance ImportError>
-                raise ImportError("wrong library name at line %d" % lineno)
+                raise ImportError(lang.LOAD_WRONG_LIB_NAME % lineno)
             # version
             version = parse_version(version)
             if version is None:
                 # raise <instance ImportError>
-                raise ImportError("wrong version format at line %d" % lineno)
+                raise ImportError(lang.LOAD_WRONG_VERSION_FORMAT % lineno)
             # path
             path = os.path.abspath(base64.b64decode(path))
             # hashes
             hashes = parse_hashes(hashes)
             if hashes is None:
                 # raise <instance ImportError>
-                raise ImportError("wrong hash format at line %d" % lineno)
+                raise ImportError(lang.LOAD_WRONG_HASH_FORMAT % lineno)
             # update tab
             mod_vers = _tab.setdefault(name, {})
             if version in mod_vers:
                 # raise <instance ImportError>
-                raise ImportError("duplicated library: %r %d.%d.%d"
+                raise ImportError(lang.LOAD_DUP_LIB
                                   % (name, version[0], version[1], version[2]))
             mod_vers[version] = {'path': path, 'hash': hashes}
     _TAB.update(_tab)
@@ -293,12 +295,12 @@ def importlib(name, version=None, lazy=0, _reload=0):
     vers = _TAB.get(name, None)
     if vers is None:
         # raise <instance ImportError>
-        raise ImportError("library %r not found" % name)
+        raise ImportError(lang.LOAD_LIB_NOT_FOUND % name)
     if version is None:
         version = max(vers.iterkeys())
     elif version not in vers:
         # raise <instance ImportError>
-        raise ImportError("library %r %r not found" % (name, version))
+        raise ImportError(lang.LOAD_LIB_VER_NOT_FOUND % (name, version))
     if not _reload and (name, version) in _CACHE:
         return _CACHE[(name, version)]
     mod_info = vers.get(version)
@@ -312,7 +314,7 @@ def importlib(name, version=None, lazy=0, _reload=0):
             for hs_maker, hval in mod_info['hash'].iteritems():
                 if get_hash(path, hs_maker) != hval:
                     # raise <instance ImportError>
-                    raise ImportError("module %r %r in %r don't match hash %r"
+                    raise ImportError(lang.LOAD_INVALID_HASH
                                       % (name, version, path, hval))
             # raise <instance ImportError>
             fobj, path, desc = imp.find_module(os.path.splitext(fname)[0],
