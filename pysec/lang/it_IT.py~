@@ -45,4 +45,4 @@ LOAD_LIB_NOT_FOUND = "libreria %r non presente"
 LOAD_LIB_VER_NOT_FOUND = "libreria %r %r non presente"
 LOAD_INVALID_HASH = "modulo %r %r in %r non corrisponde all'hash %r"
 
-STR_WRONG_BYTE = "valore byte errato: %r"
+STR_WRONG_BYTE = "wrong byte value: %r"

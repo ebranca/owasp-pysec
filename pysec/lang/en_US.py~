@@ -17,17 +17,8 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-"""Manage the language of human-readable messages in PySec"""
-from . import en_US, it_IT
-
-__all__ = 'set_lang',
-
-_default = 'en_US'
-
 WRONG_OPEN_MODE = "unknown open mode %r"
 WRONG_ONE_CHAR_STRING = "wrong 1-char string: %r"
-
-LANG_LOCALE_NOT_FOUND = "locale %r not found"
 
 LOG_ALREADY_SET = "Log already set"
 LOG_NOT_STARTED = "Log not started"
@@ -54,32 +45,5 @@ LOAD_LIB_NOT_FOUND = "library %r not found"
 LOAD_LIB_VER_NOT_FOUND = "library %r %r not found"
 LOAD_INVALID_HASH = "module %r %r in %r don't match hash %r"
 
-STR_WRONG_BYTE = "wrong byte value: %r"
-
-
-_LOCALES = {
-    'en_US': en_US,
-    'it_IT': it_IT
-}
-
-
-def set_lang(locale):
-    """Set language for human readable strings"""
-    locale = str(locale)
-    loc = _LOCALES.get(locale, None)
-    if not loc:
-        raise ValueError(LANG_LOCALE_NOT_FOUND % locale)
-    for name in dir(loc):
-        print name
-        if not name.isupper() or name.startswith('_'):
-            continue
-        msg = globals().get(name, None)
-        print repr(msg)
-        print
-        if not isinstance(msg, str):
-            continue
-        msg = getattr(loc, name, None)
-        if isinstance(msg, str):
-            globals()[name] = msg
-    _default = locale
+STR_WRONG_BYTE
 

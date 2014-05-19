@@ -29,6 +29,6 @@ def erepr(s):
 def single_byte_xor(s, xor):
     xor = int(xor)
     if xor < 0 or xor > 255:
-        raise ValueError(lang.STR_INVALID_BYTE_INT)
+        raise ValueError(lang.STR_WRONG_BYTE)
     return ''.join(chr(ord(ch) ^ xor) for ch in str(s))
 

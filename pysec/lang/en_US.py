@@ -45,3 +45,5 @@ LOAD_LIB_NOT_FOUND = "library %r not found"
 LOAD_LIB_VER_NOT_FOUND = "library %r %r not found"
 LOAD_INVALID_HASH = "module %r %r in %r don't match hash %r"
 
+STR_WRONG_BYTE = "wrong byte value: %r"
+
