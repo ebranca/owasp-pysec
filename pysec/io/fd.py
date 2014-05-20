@@ -478,8 +478,9 @@ class File(FD):
 class Directory(FD):
     """Directory represents a Directory's file descriptor."""
 
-    def __init__(self, fd):
+    def __init__(self, fd, origin=None):
         super(self.__class__, self).__init__(fd)
+        self.origin = os.path.abspath(origin)
         # self.pos = 0
 
     @staticmethod
@@ -489,9 +490,10 @@ class Directory(FD):
         reference. The object created will keep a file descriptor opened for
         the corresponding directory until close or destructor is called"""
         fd = -1
+        path = os.path.abspath(path)
         try:
             fd = dirent.opendir(path)
-            fd = Directory(fd)
+            fd = Directory(fd, path)
             fd.path = path
         except:
             if fd > -1:
@@ -504,10 +506,17 @@ class Directory(FD):
         directory"""
         return set(dirent.readdir(self.fd))
 
-    def ls(self, dot=0):
-        """Return a tuple containing the names of the entries in this directory.
+    def ls(self, filt=lambda _: 1, dot=0, base=None):
+        """Return a generator of names of the entries in this directory.
         If dot is true '.' and '..' will be include in the tuple."""
-        return tuple(name for _, name in self.readdir() if name != '.' and name != '..')
+        base = self.origin if base is None else os.path.abspath(base)
+        if dot:
+            return (os.path.join(base, name) for _, name in self.readdir()
+                    if filt(os.path.join(base, name)))
+        else:
+            return (os.path.join(base, name) for _, name in self.readdir()
+                    if name != '.' and name != '..' and
+                       filt(os.path.join(base, name)))
 
     def __iter__(self):
         """Return a iterator of all names of direcotry's entries.
