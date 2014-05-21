@@ -25,12 +25,16 @@ __all__ = 'avg',
 
 def avg(*values):
     """Generator to calculate arithmetic mean"""
-    n = -1.
-    tot = .0
-    for n, el in enumerate(values):
-        tot += el
-    n += 1.
-    avg = 0 if n == 0. else tot/n
+    el = None
+    n = float(len(values))
+    tot = sum(float(val) for val in values)
+    if n:
+        avg = tot / n
+    else:
+        while el is None:
+            el = (yield 0.)
+        n = 1.
+        avg = float(el)
     while 1:
         el = (yield avg)
         if el is None:
