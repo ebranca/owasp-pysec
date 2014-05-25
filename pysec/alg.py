@@ -27,7 +27,7 @@ __all__ = 'knp', 'knp_first', 'knp_find', 'rk', 'rk_first', 'rk_find'
 
 
 def knp(source, pattern, start=0, stop=None):
-    """Yields all oocurrencies of pattern in source[start:stop]"""
+    """Yields all occurrences of pattern in source[start:stop]"""
     shifts = [1] * (len(pattern) + 1)
     shift = 1
     for pos in xrange(0, len(pattern)):
