@@ -80,3 +80,12 @@ def split_newlines(string):
     if not newline_chars:
         yield string[line_start:]
 
+
+def only_printable(string):
+    """Remove all not printable characters from *string*"""
+    return ''.join(ch for ch in string if 32 <= ord(ch) <= 126)
+
+
+def only_visible(string):
+    """Remove all not visible characters from *string*"""
+    return ''.join(ch for ch in string if 33 <= ord(ch) <= 126)
