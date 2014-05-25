@@ -17,11 +17,25 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-from pysec.io import (fcheck,
-                      fd,
-                      fs,
-                      temp,
-                      utils)
+"""Utilities for disk ADT or operation"""
+import os.path
+import struct
 
-from pysec.io.utils import *
+from pysec.io import fd
+
+
+def hcounter(fpath):
+    """Make a file in fpath where store the last state of the counter."""
+    fpath = os.path.abspath(fpath)
+    with fd.File.open(fpath, fd.FO_WRITE) as fwr:
+        if fwr.size:
+            with fd.File.open(fpath, fd.FO_READ) as frd:
+                index = struct.unpack('!Q', frd[:8])[0]
+        else:
+            fwr.pwrite('\x00' * 8, 0)
+            index = 0
+        while 1:
+            index += 1
+            fwr.pwrite(struct.pack('!Q', index), 0)
+            yield index
 

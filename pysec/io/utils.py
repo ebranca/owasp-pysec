@@ -17,11 +17,27 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-from pysec.io import (fcheck,
-                      fd,
-                      fs,
-                      temp,
-                      utils)
+"""Utilities for pysec.io functions"""
+import os
 
-from pysec.io.utils import *
+
+__all__ = 'filter_by_mtime', 'filter_by_atime', 'filter_by_ctime'
+
+
+def filter_by_mtime(start, end):
+    def _filter_by_mtime(path):
+        return start <= os.stat(path).st_mtime <= end
+    return _filter_by_mtime
+
+
+def filter_by_atime(start, end):
+    def _filter_by_atime(path):
+        return start <= os.stat(path).st_atime <= end
+    return _filter_by_atime
+
+
+def filter_by_ctime(start, end):
+    def _filter_by_ctime(path):
+        return start <= os.stat(path).st_ctime <= end
+    return _filter_by_ctime
 

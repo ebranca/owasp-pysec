@@ -25,6 +25,7 @@ __all__ = 'set_lang',
 _default = 'en_US'
 
 WRONG_OPEN_MODE = "unknown open mode %r"
+WRONG_ONE_CHAR_STRING = "wrong 1-char string: %r"
 
 LANG_LOCALE_NOT_FOUND = "locale %r not found"
 
@@ -52,6 +53,12 @@ LOAD_DUP_LIB = "duplicated library: %r %d.%d.%d"
 LOAD_LIB_NOT_FOUND = "library %r not found"
 LOAD_LIB_VER_NOT_FOUND = "library %r %r not found"
 LOAD_INVALID_HASH = "module %r %r in %r don't match hash %r"
+
+STR_WRONG_BYTE = "wrong byte value: %r"
+
+TIME_INVALID_TIME_FORMAT = "invalid time format: %r"
+TIME_UNKNOWN_TIME_UNIT = "unknown time unit: %r"
+TIME_NOT_NUMERIC_VALUE = "unknown numeric value: %r"
 
 
 _LOCALES = {
