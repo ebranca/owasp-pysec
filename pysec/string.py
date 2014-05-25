@@ -19,6 +19,8 @@
 # -*- coding: ascii -*-
 """Various utilities for strings manipulation."""
 from pysec import lang
+from pysec.utils import xrange, eq
+from pysec.xsplit import xbounds
 
 
 def erepr(s):
@@ -31,4 +33,50 @@ def single_byte_xor(s, xor):
     if xor < 0 or xor > 255:
         raise ValueError(lang.STR_WRONG_BYTE)
     return ''.join(chr(ord(ch) ^ xor) for ch in str(s))
+
+
+def common_iprefix(*strings):
+    """Return the length of the common prefix of strings"""
+    i = 0
+    for i in xrange(0, min(len(s) for s in strings)):
+        if not eq(*(s[i] for s in strings)):
+            return i
+    return i
+
+
+def common_prefix(*strings):
+    """Return the common prefix of strings"""
+    return '' if not strings else strings[0][:common_iprefix(*strings)]
+
+
+def common_isuffix(*strings):
+    """Return the length of the common suffix of strings"""
+    i = -1
+    for i in xrange(0, min(len(s) for s in strings)):
+        if not eq(*(s[len(s) - i - 1] for s in strings)):
+            return i
+    return i + 1
+
+
+def common_suffix(*strings):
+    """Return the common prefix of strings"""
+    return strings[0][len(strings[0]) - common_isuffix(*strings):] \
+           if strings else ''
+
+
+def split_newlines(string):
+    """Generator of lines in *string* ending with '\r\n', '\n', '\n'"""
+    newline_chars = 0
+    line_start = 0
+    for i in xrange(0, len(string)):
+        if string[i] in ('\r', '\n'):
+            if not newline_chars:
+                yield string[line_start:i]
+                newline_chars = 1
+        else:
+            if newline_chars:
+                line_start = i
+                newline_chars = 0
+    if not newline_chars:
+        yield string[line_start:]
 
