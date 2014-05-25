@@ -46,3 +46,8 @@ LOAD_LIB_VER_NOT_FOUND = "libreria %r %r non presente"
 LOAD_INVALID_HASH = "modulo %r %r in %r non corrisponde all'hash %r"
 
 STR_WRONG_BYTE = "valore byte errato: %r"
+
+TIME_INVALID_TIME_FORMAT = "formato invalido: %r"
+TIME_UNKNOWN_TIME_UNIT = "unita' temporale sconosciuta: %r"
+TIME_NOT_NUMERIC_VALUE = "valore numerico invalido: %r"
+

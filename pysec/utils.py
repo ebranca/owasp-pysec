@@ -25,6 +25,11 @@ import os
 from itertools import izip_longest, islice
 import operator
 import heapq
+import datetime
+import calendar
+import re
+
+from pysec import lang
 
 
 def absjoinpath(*parts):
@@ -123,4 +128,58 @@ def eq(*values):
         return 1
     cval = values[0]
     return all(cval == val for val in values[1:])
+
+
+def secs_to_iso_utc(timestamp, suffix=1):
+    return datetime.datetime.utcfromtimestamp(int(timestamp)).isoformat(' ') + suffix
+
+
+ISO_UTC_FORMAT = re.compile(r"(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})[T_ ](?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})(?P<msecond>\.\d+)?Z?")
+
+def iso_utc_to_secs(time):
+    m = ISO_UTC_FORMAT.match(time)
+    if not m:
+        raise ValueError(lang.TIME_INVALID_TIME_FORMAT % time)
+    year = int(m.group('year'))
+    month = int(m.group('month'))
+    day = int(m.group('day'))
+    hour = int(m.group('hour'))
+    minute = int(m.group('minute'))
+    second = int(m.group('second'))
+    msec = m.group('msecond')
+    if msec:
+        msec = float(msec)
+    else:
+        msec = 0.
+    return float(calendar.timegm((year, month, day, hour, minute, second, 0, 1, 0))) + msec
+
+
+DAY = 24 * 60 * 60
+MONTH = 31 * DAY
+YEAR = 365 * DAY
+
+
+def parse_duration(duration):
+    secs = 0
+    for field in duration.split():
+        field = field.strip()
+        if field.endswith('sec'):
+            field = field[:-3]
+            unit = 1
+        elif field.endswith('day'):
+            unit = DAY
+            field = field[:-3]
+        elif field.endswith('month'):
+            unit = MONTH
+            field = field[:-5]
+        elif field.endswith('year'):
+            unit = YEAR
+            field = field[:-4]
+        else:
+            raise ValueError(lang.TIME_UNKNOWN_TIME_UNIT % field)
+        field = field.strip()
+        if not field.isdigit():
+            raise ValueError(lang.TIME_NOT_NUMERIC_VALUE % field)
+        secs += int(field) * unit
+    return secs
 

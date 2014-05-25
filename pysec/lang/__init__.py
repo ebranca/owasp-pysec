@@ -56,6 +56,10 @@ LOAD_INVALID_HASH = "module %r %r in %r don't match hash %r"
 
 STR_WRONG_BYTE = "wrong byte value: %r"
 
+TIME_INVALID_TIME_FORMAT = "invalid time format: %r"
+TIME_UNKNOWN_TIME_UNIT = "unknown time unit: %r"
+TIME_NOT_NUMERIC_VALUE = "unknown numeric value: %r"
+
 
 _LOCALES = {
     'en_US': en_US,
