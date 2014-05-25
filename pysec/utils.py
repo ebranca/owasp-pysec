@@ -87,7 +87,6 @@ def subtract_path(prefix, path):
 def xrange(start, stop, step=1):
     """This xrange use python's integers and have not limits of
     machine integers."""
-    act = int(start)
     stop = int(stop)
     step = int(step)
     if step < 0:
@@ -97,6 +96,7 @@ def xrange(start, stop, step=1):
         bcmp = operator.lt
     else:
         raise StopIteration
+    act = int(start)
     while bcmp(act, stop):
         yield act
         act += step
@@ -116,4 +116,11 @@ def top_n(values, first_n=10):
 
 def clamp(val, min_val, max_val):
     return min_val if val < min_val else (max_val if val > max_val else val)
+
+
+def eq(*values):
+    if not values:
+        return 1
+    cval = values[0]
+    return all(cval == val for val in values[1:])
 
