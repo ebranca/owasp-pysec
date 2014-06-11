@@ -30,7 +30,9 @@
 
 
 typedef struct {
+# ifndef S_SPLINT_S
     PyObject_HEAD;
+#endif
 
     Py_ssize_t size;
     void *mem;
