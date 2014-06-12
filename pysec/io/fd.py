@@ -19,7 +19,7 @@
 # -*- coding: ascii -*-
 """Contains FD and FD-like classes for operations with file descriptors"""
 from pysec.core import Error, Object, unistd, dirent
-from pysec.xsplit import xlines
+from pysec.xsplit import xlines, xbounds
 from pysec.alg import knp_first
 from pysec.io import fcheck
 from pysec.utils import xrange
@@ -463,6 +463,25 @@ class File(FD):
         from the line"""
         start = self.pos if start is None else int(start)
         return xlines(self, eol, keep_eol, start, stop, knp_first)
+
+    def get_line(self, lineno, start=None, max_size=None, eol='\n'):
+        lineno = int(lineno)
+        start = int(self.pos if start is None else start)
+        len_eol = len(eol)
+        try:
+            for atline, bounds in enumerate(xbounds(self, eol, 1, start, (start + max_size) if max_size is not None else None, knp_first)):
+                if atline == lineno:
+                    if bounds == (None, None):
+                        return None
+                    end = bounds[1]
+                    if self[end-len_eol:end] == eol:
+                        return self[bounds[0]:end-len_eol]
+                    else:
+                        return None
+                elif atline > lineno:
+                    return None
+        except StopIteration:
+            return None
 
     def chunks(self, size,  start=0, stop=None):
         """Divides FD's content in chunk of length *size* starting from *start*
