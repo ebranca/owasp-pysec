@@ -76,7 +76,7 @@ def linevars(code, frame=None):
     parent = None
     prefix = ''
     value = NOVAL
-    for tok_type, token, start, end, line in tokenize.generate_tokens(StringReadline(code)):
+    for tok_type, token, start, end, line in tokenize.generate_tokens(StringReadline(code).readline):
         if tok_type == tokenize.NEWLINE:
             break
         elif tok_type == tokenize.NAME and token not in keyword.kwlist:
