@@ -98,7 +98,7 @@ def linevars(code, frame=None):
 
 class Hook(Object):
 
-    def __init__(self, formatter, out=sys.stdout):
+    def __init__(self, formatter, out=sys.stderr):
         self.out = out
         self.formatter = formatter
 
@@ -108,3 +108,9 @@ class Hook(Object):
     def handle(self, info=None):
         self.out.write(self.formatter(info or sys.exc_info()))
         self.out.write('\n')
+
+
+
+def reset_exceptook():
+    sys.excepthook = sys.__excepthook__
+
