@@ -40,7 +40,7 @@ def getvar(name, frame=None):
     val = frame.f_locals.get(name, NORESULT)
     if val is not NORESULT:
         return SCOPE_LOCAL, val
-    val = frame.f_locals.get(name, NORESULT)
+    val = frame.f_globals.get(name, NORESULT)
     if val is not NORESULT:
         return SCOPE_GLOBAL, val
     builtins = frame.f_globals.get('__builtins__', NORESULT)
