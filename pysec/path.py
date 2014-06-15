@@ -18,8 +18,10 @@
 #
 # -*- coding: ascii -*-
 """"""
-import os.path
+import fnmatch
 from itertools import izip_longest
+import os.path
+import string
 
 
 def absjoinpath(*parts):
@@ -77,4 +79,19 @@ def subtract_path(prefix, path):
     for _, part2 in couples:
         post.append(part2)
     return os.path.join(*pre), os.path.join(*post)
+
+
+def match_path(path, patterns, abspath=0, case_sensitive=1):
+    if case_sensitive:
+        match_func = fnmatch.fnmatchcase
+        transform = os.path.abspath if abspath else lambda s: s
+    else:
+        match_func = fnmatch.fnmatch
+        path = path.lower()
+        transform = (lambda p: os.path.abspath(p.lower())) if abspath else string.lower
+    return any(match_func(path, transform(pattern)) for pattern in patterns)
+
+
+def filter_paths(paths, whitelist=('*',), blacklist=(), case_sensitive=()):
+    return (path for path in paths if match_path(path, whitelist) and not match_path(path, blacklist))
 
