@@ -177,7 +177,11 @@ def short_tb(exc_type, exc_value, exc_tb):
     return 'Traceback: %s\nError: %s %r\n' % (' -> '.join(traceback), exc_type.__name__, str(exc_value))
 
 
+<<<<<<< HEAD
 def long_tb(exc_type, exc_value, exc_tb, max_length=80):
+=======
+def long_tb(exc_type, exc_value, exc_tb):
+>>>>>>> 8bc4e727f13e269c13cf743ab21b3af09a733f7d
     traceback = ['Traceback (most recent call last):']
     lvl = 0
     while exc_tb:
@@ -192,8 +196,12 @@ def long_tb(exc_type, exc_value, exc_tb, max_length=80):
         for token, where, val in linevars(line.strip(), exc_tb.tb_frame):
             if where is None:
                 val = '<undefined>'
+<<<<<<< HEAD
             val = repr(val)
             traceback.append('    %r: %s' % (token, '%s...' % val[:max_length] if len(val) > max_length else val))
+=======
+            traceback.append('    %r: %r' % (token, val))
+>>>>>>> 8bc4e727f13e269c13cf743ab21b3af09a733f7d
         exc_tb = exc_tb.tb_next
         lvl += 1
     return '%s\n[ERROR]\n%s: %r\n' % ('\n'.join(traceback), exc_type.__name__, str(exc_value))
