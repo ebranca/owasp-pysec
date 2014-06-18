@@ -217,6 +217,11 @@ class Expression(Object):
     def __ixor__(self, other):
         return Expression((self, other), operator.ixor)
 
+    def __getattr__(self, attr):
+        return Expression((self,), operator.attrgetter(attr))
+
+    def __call__(self, *args, **kwds):
+        return Expression((self, args, kwds), apply)
 
 
 class Variable(Expression):
