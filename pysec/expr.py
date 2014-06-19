@@ -33,6 +33,7 @@ Example:
     # False
 
 """
+import inspect
 import operator
 
 from pysec.core import Object
@@ -61,6 +62,8 @@ class Expression(Object):
         func = self.func
         if func is None:
             return values.compute(**kwds) if isinstance(values, Expression) else values
+        elif isinstance(values, dict):
+            return func(**{attr:(val.compute(**kwds) if isinstance(val, Expression) else val) for attr, val in values.iteritems()})
         else:
             return func(*tuple((val.compute(**kwds) if isinstance(val, Expression) else val) for val in values))
 
@@ -234,6 +237,16 @@ class Variable(Expression):
 
     def compute(self, **kwds):
         return kwds[self.name]
+
+
+class FunctionMaker(Object):
+
+    def __init__(self, func):
+        self.func = func
+
+    def __call__(self, *args, **kwds):
+        kwds = inspect.getcallargs(self.func, *args, **kwds)
+        return Expression(kwds, self.func)
 
 
 class VarMaker(Object):
