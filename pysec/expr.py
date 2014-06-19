@@ -38,6 +38,7 @@ import operator
 
 from pysec.core import Object
 from pysec import lang
+from pysec.path import match_path as _match_path
 
 
 __all__ = 'Expression', 'var', 'const'
@@ -260,3 +261,10 @@ class VarMaker(Object):
         
 var = VarMaker()
 const = lambda val: Expression(val, None)
+
+
+# utilities
+
+length = FunctionMaker(lambda v: len(v))
+match_path = FunctionMaker(_match_path)
+
