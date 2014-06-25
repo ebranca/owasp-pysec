@@ -125,3 +125,25 @@ def parse_duration(duration):
         secs += int(field) * unit
     return secs
 
+
+def ilen(gen, max=None):
+    """Iterate a generator and return the number of iterations.
+    If max is not None, the iteration terminate at *max* iteration."""
+    l = 0
+    if max is None:
+        for _ in gen:
+            l += 1
+        return l
+    else:
+        max = int(max)
+        if max < 0:
+            raise ValueError("invalid negative max: %d" % max)
+        for i in xrange(max):
+            try:
+                gen.next()
+            except StopIteration:
+                break
+        else:
+            return max
+        return i + 1
+
