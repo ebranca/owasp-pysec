@@ -94,11 +94,11 @@ def minimize_pattern(pattern):
     return new_pattern
 
 
-def byte_search(text, pattern):
+def byte_search(text, pattern, offset=0):
     pattern = minimize_pattern(pattern)
     p = 0
     p_len = len(pattern)
-    t = 0
+    t = int(offset)
     t_len = len(text)
     while t < t_len and p <= t_len and p < p_len:
         tc = text[t]
