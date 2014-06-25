@@ -19,7 +19,7 @@
 # -*- coding: ascii -*-
 """Contains FD and FD-like classes for operations with file descriptors"""
 from pysec.core import Error, Object, unistd, dirent
-from pysec.xsplit import xlines, xbounds
+from pysec.xsplit import xbounds
 from pysec.alg import knp_first
 from pysec.io import fcheck
 from pysec.utils import xrange
@@ -177,7 +177,7 @@ class FD(Object):
 ### Open modes for regular files
 # create a new file and raise error if it exists, use read mode
 FO_READNEW = 0
-# read only and raise error if it doesn't exists
+# read only and raise error if it doesn't exist
 FO_READEX = 1
 # create a new file and raise error if it exists, use write mode
 FO_WRNEW = 2
@@ -435,13 +435,48 @@ class File(FD):
             raise ValueError("invalid negative position: %d" % pos)
         self.pos = pos
 
-    def lines(self, start=None, stop=None, eol='\n', keep_eol=0):
-        """Splits FD's content in lines that end with *eol*, it'll start from
-        *start* position and it'll stop at stop position, if *stop* is None it
-        will stop at the end of FD. If keep_eol is true doesn't remove *eol*
-        from the line"""
-        start = self.pos if start is None else int(start)
-        return xlines(self, eol, keep_eol, start, stop, knp_first)
+    def xlines(self, start=0, stop=None, eol='\n', keep_eol=0, size=4096):
+        """Splits FD's content in lines' boundaries that end with *eol*, it will
+        start from *start* position and it'll stop at stop position, if *stop*
+        is None it will stop at the end of FD. If keep_eol is true doesn't
+        remove *eol* from the line"""
+        line_start = chunk_start = int(start)
+        if start < 0:
+            raise ValueError("negative *start*: %d" % start)
+        stop = len(self) if stop is None else int(stop)
+        if stop < 0:
+            raise ValueError("negative *stop*: %d" % stop)
+        if start > stop:
+            raise ValueError("*stop* must be greater than or euqal to *start*")
+        if size < 0:
+            raise ValueError("negative *size*: %d" % size)
+        eol_len = len(eol)
+        size = max(size, eol_len)
+        chunk = self[chunk_start:chunk_start+max(size, eol_len)]
+        chunk_end = chunk_start + len(chunk)
+        while chunk:
+            pos = chunk.find(eol)
+            if pos < 0:
+                if chunk_end >= stop:
+                    break
+                chunk_start = chunk_end - eol_len
+                chunk_end = min(chunk_start + size, stop)
+                chunk = self[chunk_start:chunk_end]
+            else:
+                chunk_start = chunk_start + pos + eol_len
+                yield line_start, chunk_start if keep_eol else (chunk_start - eol_len)
+                line_start = chunk_start
+                chunk = chunk[pos + eol_len:]
+                if not chunk:
+                    if chunk_start >= stop:
+                        break
+                    chunk_start = chunk_end - eol_len + 1
+                    chunk_end = chunk_start + size
+                    chunk = self[chunk_start:chunk_end]
+
+    def lines(self, start=0, stop=None, eol='\n', keep_eol=0, size=4096):
+        return (self[start:end] for start, end
+                in self.xlines(start, stop, eol, keep_eol, size))
 
     def get_line(self, lineno, start=None, max_size=None, eol='\n'):
         lineno = int(lineno)
