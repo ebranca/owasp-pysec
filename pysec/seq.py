@@ -12,3 +12,7 @@ def ioc(seq, shift=1):
             match += 1
     return float(match) / float(seq_len)
 
+
+def contains_only(seq, *values):
+    return all(el in values for el in seq)
+
