@@ -65,9 +65,9 @@ PyDoc_STRVAR(unistd_access__doc__,
 "Errors: EACCES, ELOOP, ENAMETOOLONG, ENOENT, ENOTDIR, EROFS, EINVAL, ETXTBSY\n"
 "ENAMETOOLONG");
 
-
+/*@null@*/
 static PyObject*
-unistd_access(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_access(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     char *path;
     int amode = R_OK;
@@ -95,8 +95,9 @@ PyDoc_STRVAR(unistd_alarm__doc__,
 "request would have generated a SIGALRM signal. Otherwise, alarm() shall\n"
 "return 0.");
 
+/*@null@*/
 static PyObject*
-unistd_alarm(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_alarm(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     unsigned seconds = 0;
     static char *keywords[] = {"seconds", NULL};
@@ -113,8 +114,9 @@ PyDoc_STRVAR(unistd_chdir__doc__,
 "returned, the current working directory shall remain unchanged\n\n"
 "Errors: EACCES, ELOOP, ENAMETOOLONG, ENOENT, ENOTDIR,");
 
+/*@null@*/
 static PyObject*
-unistd_chdir(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_chdir(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     char *path;
     int ret;
@@ -160,8 +162,9 @@ PyDoc_STRVAR(unistd_chown__doc__,
 "Errors: EACCES, ELOOP, ENAMETOOLONG, ENOTDIR, ENOENT, EPERM, EROFS, EIO,\n"
 "EINTR, EINVAL");
 
+/*@null@*/
 static PyObject*
-unistd_chown(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_chown(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     char *path;
     int ret;
@@ -245,8 +248,9 @@ PyDoc_STRVAR(unistd_close__doc__,
 "Upon successful completion, 0 shall be returned; otherwise, errno shall be\n"
 "returned");
 
+/*@null@*/
 static PyObject*
-unistd_close(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_close(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes;
     static char *kwlist[] = {"fildes", NULL};
@@ -264,8 +268,9 @@ PyDoc_STRVAR(unistd_confstr__doc__,
 "The implementation shall support the following name values, defined in\n"
 "<unistd.h>");
 
+/*@null@*/
 static PyObject*
-unistd_confstr(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_confstr(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int name;
     char *buf;
@@ -298,8 +303,9 @@ PyDoc_STRVAR(unistd_crypt__doc__,
 "to be reentrant is not required to be thread-safe.\n\n"
 "Errors: ENOSYS.");
 
+/*@null@*/
 PyObject*
-unistd_crypt(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_crypt(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int end;
     char *key,
@@ -329,7 +335,7 @@ PyDoc_STRVAR(unistd_ctermid__doc__,
 "with a non-NULL parameter.\n\n");
 
 PyObject*
-unistd_ctermid(PyObject* self)
+unistd_ctermid(/*@unused@*/  PyObject* self)
 {
     char *s;
     PyObject *res;
@@ -347,8 +353,9 @@ PyDoc_STRVAR(unistd_dup__doc__,
 "shall be returned; otherwise, -1 shall be returned and errno set to indicate\n"
 "the error.");
 
+/*@null@*/
 PyObject*
-unistd_dup(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_dup(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes,
         ret;
@@ -380,8 +387,9 @@ PyDoc_STRVAR(unistd_dup2__doc__,
 "the error.\n\n"
 "Errors: EBADF, EMFILE, EINTR");
 
+/*@null@*/
 PyObject*
-unistd_dup2(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_dup2(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes,
         fildes2,
@@ -411,8 +419,9 @@ PyDoc_STRVAR(unistd_encrypt__doc__,
 "The encrypt() function need not be reentrant. A function that is not required\n"
 "to be reentrant is not required to be thread-safe.");
 
+/*@null@*/
 PyObject*
-unistd_encrypt(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_encrypt(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     char *block;
     PyObject *ef_obj = Py_True;
@@ -465,8 +474,9 @@ PyDoc_STRVAR(unistd__exit__doc__,
 "process is terminated with the consequences described below.\n");
 /* TODO not complete */
 
+/*@null@*/
 static PyObject*
-unistd__exit(PyObject* self, PyObject* args, PyObject* kwds)
+unistd__exit(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int status=0;
     static char *kwlist[] = {"status", NULL};
@@ -490,8 +500,9 @@ PyDoc_STRVAR(unistd_fchdir__doc__,
 "shall remain unchanged.\n\n"
 "Errors: EACCES, EBADF, ENOTDIR, EINTR, EIO.");
 
+/*@null@*/
 static PyObject*
-unistd_fchdir(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_fchdir(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes;
     static char *kwlist[] = {"fildes", NULL};
@@ -505,8 +516,9 @@ PyDoc_STRVAR(unistd_fchown__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
-unistd_fchown(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_fchown(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes;
 
@@ -524,8 +536,9 @@ PyDoc_STRVAR(unistd_fdatasync__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
-unistd_fdatasync(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_fdatasync(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes;
     static char *kwlist[] = {"fildes", NULL};
@@ -540,7 +553,7 @@ PyDoc_STRVAR(unistd_fork__doc__,
 /* TODO - doc */
 
 static PyObject*
-unistd_fork(PyObject* self)
+unistd_fork(/*@unused@*/  PyObject* self)
 {
     return PyLong_FromPid(fork());
 }
@@ -550,8 +563,9 @@ PyDoc_STRVAR(unistd_fpathconf__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
-unistd_fpathconf(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_fpathconf(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes,
         name;
@@ -568,8 +582,9 @@ PyDoc_STRVAR(unistd_fsync__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
-unistd_fsync(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_fsync(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes;
     static char *kwlist[] = {"fildes", NULL};
@@ -583,8 +598,9 @@ PyDoc_STRVAR(unistd_ftruncate__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
-unistd_ftruncate(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_ftruncate(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes,
         length;
@@ -602,7 +618,7 @@ PyDoc_STRVAR(unistd_getcwd__doc__,
 #define INCREMENT   1024
 
 static PyObject*
-unistd_getcwd(PyObject* self)
+unistd_getcwd(/*@unused@*/  PyObject* self)
 {
     /* from posixmodule.c */
     int bufsize = 0;
@@ -637,7 +653,7 @@ PyDoc_STRVAR(unistd_getegid__doc__,
 /* TODO - doc */
 
 PyObject*
-unistd_getegid(PyObject* self)
+unistd_getegid(/*@unused@*/  PyObject* self)
 {
     return PyLong_FromPid(getegid());
 }
@@ -648,7 +664,7 @@ PyDoc_STRVAR(unistd_geteuid__doc__,
 /* TODO - doc */
 
 PyObject*
-unistd_geteuid(PyObject* self)
+unistd_geteuid(/*@unused@*/  PyObject* self)
 {
     return PyLong_FromPid(geteuid());
 }
@@ -658,7 +674,7 @@ PyDoc_STRVAR(unistd_getgid__doc__,
 /* TODO - doc */
 
 PyObject*
-unistd_getgid(PyObject* self)
+unistd_getgid(/*@unused@*/  PyObject* self)
 {
     return PyLong_FromPid(getgid());
 }
@@ -743,8 +759,9 @@ PyDoc_STRVAR(unistd_getpgid__doc__,
 "Otherwise, it shall return (pid_t)-1 and set errno to indicate the error.\n"
 "Errors: EPERM, ESRCH, EINVAL");
 
+/*@null@*/
 PyObject*
-unistd_getpgid(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_getpgid(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     pid_t pid;
     static char *kwlist[] = {"pid", NULL};
@@ -762,7 +779,7 @@ PyDoc_STRVAR(unistd_getpgrp__doc__,
 "process.");
 
 PyObject*
-unistd_getpgrp(PyObject* self)
+unistd_getpgrp(/*@unused@*/  PyObject* self)
 {
     return PyLong_FromPid(getpgrp());
 }
@@ -772,7 +789,7 @@ PyDoc_STRVAR(unistd_getpid__doc__,
 "The getpid() function shall return the process ID of the calling process.");
 
 PyObject*
-unistd_getpid(PyObject* self)
+unistd_getpid(/*@unused@*/  PyObject* self)
 {
     return PyLong_FromPid(getpid());
 }
@@ -783,7 +800,7 @@ PyDoc_STRVAR(unistd_getppid__doc__,
 "process.");
 
 PyObject*
-unistd_getppid(PyObject* self)
+unistd_getppid(/*@unused@*/  PyObject* self)
 {
     return PyLong_FromPid(getppid());
 }
@@ -795,8 +812,9 @@ PyDoc_STRVAR(unistd_getsid__doc__,
 "specifies the calling process.\n\n"
 "Errors: EPERM, ESRCH.");
 
+/*@null@*/
 PyObject*
-unistd_getsid(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_getsid(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     pid_t pid,
           sid;
@@ -814,7 +832,7 @@ PyDoc_STRVAR(unistd_getuid__doc__,
 "The getuid() function shall return the real user ID of the calling process.");
 
 PyObject*
-unistd_getuid(PyObject* self)
+unistd_getuid(/*@unused@*/  PyObject* self)
 {
     return PyLong_FromPid(getuid());
 }
@@ -823,8 +841,9 @@ unistd_getuid(PyObject* self)
 PyDoc_STRVAR(unistd_isatty__doc__,
 "The isatty() function shall return the real user ID of the calling process.");
 
+/*@null@*/
 PyObject*
-unistd_isatty(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_isatty(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes;
     static char *kwlist[] = {"fildes", NULL};
@@ -845,6 +864,7 @@ PyDoc_STRVAR(unistd_setgid__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject *
 unistd_setgid(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -868,6 +888,7 @@ PyDoc_STRVAR(unistd_setpgid__doc__,
 "As a special case, if pid is 0, the process ID of the calling process shall be\n"
 "used. Also, if pgid is 0, the process ID of the indicated process shall be used.");
 
+/*@null@*/
 static PyObject *
 unistd_setpgid(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -883,6 +904,7 @@ unistd_setpgid(PyObject *self, PyObject *args, PyObject *kwds)
 PyDoc_STRVAR(unistd_setregid__doc__,
 "");
 
+/*@null@*/
 static PyObject *
 unistd_setregid(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -899,6 +921,7 @@ unistd_setregid(PyObject *self, PyObject *args, PyObject *kwds)
 PyDoc_STRVAR(unistd_setreuid__doc__,
 "");
 
+/*@null@*/
 static PyObject *
 unistd_setreuid(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -927,6 +950,7 @@ unistd_setsid(PyObject *self)
 PyDoc_STRVAR(unistd_setuid__doc__,
 "");
 
+/*@null@*/
 static PyObject *
 unistd_setuid(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -942,6 +966,7 @@ unistd_setuid(PyObject *self, PyObject *args, PyObject *kwds)
 PyDoc_STRVAR(unistd_sleep__doc__,
 "");
 
+/*@null@*/
 static PyObject *
 unistd_sleep(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -975,8 +1000,9 @@ PyDoc_STRVAR(unistd_nice__doc__,
 "Otherwise, -1 shall be returned, the process' nice value shall not be changed,\n"
 "and errno shall be set to indicate the error.");
 
+/*@null@*/
 static PyObject*
-unistd_nice(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_nice(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int incr=0;
     static char *kwlist[] = {"incr", NULL};
@@ -993,8 +1019,9 @@ PyDoc_STRVAR(unistd_pathconf__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
-unistd_pathconf(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_pathconf(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     char *path;
     int name;
@@ -1020,7 +1047,7 @@ PyDoc_STRVAR(unistd_vfork__doc__,
 "errno shall be set to indicate the error.");
 
 static PyObject*
-unistd_vfork(PyObject* self)
+unistd_vfork(/*@unused@*/  PyObject* self)
 {
     return PyLong_FromPid(vfork());
 }
@@ -1029,8 +1056,9 @@ PyDoc_STRVAR(unistd_read__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
-unistd_read(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_read(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes;
     char *buf;
@@ -1054,8 +1082,9 @@ PyDoc_STRVAR(unistd_pread__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
-unistd_pread(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_pread(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes;
     char *buf;
@@ -1081,8 +1110,9 @@ PyDoc_STRVAR(unistd_write__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
-unistd_write(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_write(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes;
     char *buf;
@@ -1106,8 +1136,9 @@ PyDoc_STRVAR(unistd_pwrite__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
-unistd_pwrite(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_pwrite(/*@unused@*/  PyObject* self, PyObject* args, PyObject* kwds)
 {
     int fildes;
     char *buf;
@@ -1128,8 +1159,9 @@ unistd_pwrite(PyObject* self, PyObject* args, PyObject* kwds)
 PyDoc_STRVAR(unistd_sysconf__doc__,
 "");
 
+/*@null@*/
 static PyObject*
-unistd_sysconf(PyObject* self, PyObject* args, PyObject* kwds)
+unistd_sysconf(/*@unused@*/ PyObject* self, PyObject* args, PyObject* kwds)
 {
     int name, res;
     static char *kwlist[] = {"name", NULL};

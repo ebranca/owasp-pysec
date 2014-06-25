@@ -115,3 +115,62 @@ def result(*rules):
         return __result
     return _result
 
+
+class LimitError(CheckRuleError):
+    pass
+
+
+LIMITS = {}
+
+
+def delimit(limit_name):
+    limits = LIMITS.get(limit_name, None)
+    parsers = in_limits = out_limits = ()
+    lit = iter(limits)
+    try:
+        parsers = lit.next()
+        in_limits = lit.next()
+        out_limits = lit.next()
+    except StopIteration:
+        pass
+    def _delimit(func):
+        if not parsers and not in_limits and not out_limits:
+            return func
+        def __delimit(*args, **kwds):
+            kwds = inspect.getcallargs(func, *args, **kwds)
+            # parse args
+            for name, parse in parsers.iteritems():
+                kwds[name] = parse(kwds[name])
+            # check args
+            for rule in in_limits:
+                if isinstance(rule, Expression):
+                    if not rule.compute(**kwds):
+                        raise LimitError(rule, kwds)
+                elif isinstance(rule, tuple):
+                    for rl in rule:
+                        if isinstance(rl, Expression):
+                            if not rl.compute(**kwds):
+                                raise LimitError(rl, kwds)
+                        else:
+                            raise TypeError(lang.CHECK_WRONG_SUBRULE_TYPE % type(rl))
+                else:
+                    raise TypeError(lang.CHECK_WRONG_RULE_TYPE % type(rule))
+            # check result
+            res = func(**kwds)
+            for rule in out_limits:
+                if isinstance(rule, Expression):
+                    if not rule.compute(x=res):
+                        raise LimitError(rule, kwds)
+                elif isinstance(rule, tuple):
+                    for rl in rule:
+                        if isinstance(rl, Expression):
+                            if not rl.compute(x=res):
+                                raise LimitError(rl, kwds)
+                        else:
+                            raise TypeError(lang.CHECK_WRONG_SUBRULE_TYPE % type(rl))
+                else:
+                    raise TypeError(lang.CHECK_WRONG_RULE_TYPE % type(rule))
+            return res
+        return __delimit
+    return _delimit
+

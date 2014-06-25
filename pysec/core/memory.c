@@ -30,7 +30,9 @@
 
 
 typedef struct {
+# ifndef S_SPLINT_S
     PyObject_HEAD;
+#endif
 
     Py_ssize_t size;
     void *mem;
@@ -44,23 +46,23 @@ PyDoc_STRVAR(memory__doc__,
 
 /*  Memory Type */
 
-static PyObject* MemoryType__new__(PyTypeObject *, PyObject *, PyObject *);
+/*@null@*/ static PyObject* MemoryType__new__(PyTypeObject *, PyObject *, PyObject *);
 static void MemoryType_dealloc(PyObject *);
-static PyObject* MemoryType_set(PyObject *, PyObject *, PyObject *);
-static PyObject* MemoryType_set_word(PyObject *, PyObject *, PyObject *);
-static PyObject* MemoryType_get(PyObject *, PyObject *, PyObject *);
-static PyObject* MemoryType_get_word(PyObject *, PyObject *, PyObject *);
-static PyObject* MemoryType_find(PyObject *self, PyObject *args, PyObject *kwds);
-static PyObject* MemoryType_str(PyObject *);
-static PyObject* MemoryType_repr(PyObject *);
+/*@null@*/ static PyObject* MemoryType_set(PyObject *, PyObject *, PyObject *);
+/*@null@*/ static PyObject* MemoryType_set_word(PyObject *, PyObject *, PyObject *);
+/*@null@*/ static PyObject* MemoryType_get(PyObject *, PyObject *, PyObject *);
+/*@null@*/ static PyObject* MemoryType_get_word(PyObject *, PyObject *, PyObject *);
+/*@null@*/ static PyObject* MemoryType_find(PyObject *self, PyObject *args, PyObject *kwds);
+/*@null@*/ static PyObject* MemoryType_str(PyObject *);
+/*@null@*/ static PyObject* MemoryType_repr(PyObject *);
 static Py_ssize_t MemoryType_len(PyObject *);
-static PyObject* MemoryType_item(PyObject *, Py_ssize_t);
-static PyObject* MemoryType_itemslice(PyObject *, Py_ssize_t, Py_ssize_t);
+/*@null@*/ static PyObject* MemoryType_item(PyObject *, Py_ssize_t);
+/*@null@*/ static PyObject* MemoryType_itemslice(PyObject *, Py_ssize_t, Py_ssize_t);
 static int MemoryType_assitem(PyObject *, Py_ssize_t, PyObject *);
 static int MemoryType_assslice(PyObject *, Py_ssize_t, Py_ssize_t, PyObject *);
 static int MemoryType_contains(PyObject *, PyObject *);
-static PyObject* MemoryType_read(PyObject *self, PyObject *args, PyObject *kwds);
-static PyObject* MemoryType_write(PyObject *self, PyObject *args, PyObject *kwds);
+/*@null@*/ static PyObject* MemoryType_read(PyObject *self, PyObject *args, PyObject *kwds);
+/*@null@*/ static PyObject* MemoryType_write(PyObject *self, PyObject *args, PyObject *kwds);
 
 
 static PyMemberDef MemoryType_members[] = {
@@ -141,6 +143,7 @@ static PyTypeObject MemoryType = {
 
 /* API */
 
+/*@null@*/
 PyObject*
 Memory_New(Py_ssize_t size, unsigned char b)
 {
@@ -195,6 +198,7 @@ Memory_set_word(MemoryObject *mem, Py_ssize_t offset, void *word, Py_ssize_t len
     return 0;
 }
 
+/*@null@*/
 void *
 Memory_get_word(MemoryObject *mem, Py_ssize_t offset, Py_ssize_t len)
 {
@@ -297,6 +301,7 @@ Memory_find(MemoryObject *mem, uint8_t* path, Py_ssize_t plen, Py_ssize_t start,
 
 /* methods */
 
+/*@null@*/
 static PyObject*
 MemoryType__new__(PyTypeObject *subtype, PyObject *args, PyObject *kwds)
 {
@@ -315,6 +320,7 @@ MemoryType_dealloc(PyObject* self)
     PyMem_Free(((MemoryObject *)(self))->mem);
 }
 
+/*@null@*/
 static PyObject*
 MemoryType_str(PyObject *self)
 {
@@ -342,6 +348,7 @@ MemoryType_str(PyObject *self)
     return str;
 }
 
+/*@null@*/
 static PyObject*
 MemoryType_repr(PyObject *self)
 {
@@ -369,7 +376,7 @@ MemoryType_repr(PyObject *self)
     return PyObject_Repr(str);
 }
 
-
+/*@null@*/
 static PyObject* 
 MemoryType_set(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -392,7 +399,7 @@ MemoryType_set(PyObject *self, PyObject *args, PyObject *kwds)
         return PyInt_FromLong(old);
 }
 
-
+/*@null@*/
 static PyObject* 
 MemoryType_set_word(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -417,6 +424,7 @@ MemoryType_set_word(PyObject *self, PyObject *args, PyObject *kwds)
     return self;
 }
 
+/*@null@*/
 static PyObject*
 MemoryType_find(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -441,7 +449,7 @@ MemoryType_find(PyObject *self, PyObject *args, PyObject *kwds)
     }
 }
 
-
+/*@null@*/
 static PyObject* 
 MemoryType_get(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -463,6 +471,7 @@ MemoryType_get(PyObject *self, PyObject *args, PyObject *kwds)
         return PyInt_FromLong(b);
 }
 
+/*@null@*/
 static PyObject* 
 MemoryType_get_word(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -527,7 +536,7 @@ MemoryType_contains(PyObject *o1, PyObject *o2)
     }
 }
 
-
+/*@null@*/
 static PyObject*
 MemoryType_read(PyObject *self, PyObject *args, PyObject *kwds)
 {
@@ -548,6 +557,7 @@ MemoryType_read(PyObject *self, PyObject *args, PyObject *kwds)
     return PyInt_FromSsize_t(len);
 }
 
+/*@null@*/
 static PyObject*
 MemoryType_write(PyObject *self, PyObject *args, PyObject *kwds) {
     int fd;
@@ -569,6 +579,7 @@ MemoryType_write(PyObject *self, PyObject *args, PyObject *kwds) {
 
 /* sequence methods */
 
+/*@null@*/
 static PyObject*
 MemoryType_item(PyObject *o, Py_ssize_t i) {
     int b;
@@ -621,6 +632,7 @@ MemoryType_assitem(PyObject *o, Py_ssize_t i, PyObject *v)
     return 0;
 }
 
+/*@null@*/
 static PyObject*
 MemoryType_itemslice(PyObject *o, Py_ssize_t a, Py_ssize_t b)
 {

@@ -29,8 +29,9 @@ PyDoc_STRVAR(dirent_opendir__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
-dirent_opendir(PyObject* self, PyObject* args, PyObject* kwds)
+dirent_opendir(/*@unused@*/ PyObject* self, PyObject* args, PyObject* kwds)
 {
     char *path;
     int fd;
@@ -49,6 +50,7 @@ PyDoc_STRVAR(dirent_readdir__doc__,
 "");
 /* TODO - doc */
 
+/*@null@*/
 static PyObject*
 dirent_readdir(PyObject* self, PyObject* args, PyObject* kwds)
 {

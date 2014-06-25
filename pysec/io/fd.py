@@ -19,16 +19,13 @@
 # -*- coding: ascii -*-
 """Contains FD and FD-like classes for operations with file descriptors"""
 from pysec.core import Error, Object, unistd, dirent
-from pysec.xsplit import xlines
+from pysec.xsplit import xbounds
 from pysec.alg import knp_first
 from pysec.io import fcheck
 from pysec.utils import xrange
-from pysec import log
 import os
 import fcntl
 
-
-__name__ = 'pysec.io.fd'
 
 
 class FDError(Error):
@@ -78,13 +75,9 @@ def write_check(func):
     return _write
 
 
-log.register_actions('FD_NEW', 'FD_CLOSE')
-
-
 class FD(Object):
     """FD represents a File Descriptor"""
 
-    @log.wrap(log.actions.FD_NEW, fields=('fd',), lib=__name__)
     def __init__(self, fd):
         fd = int(fd)
         if fd < 0:
@@ -106,7 +99,6 @@ class FD(Object):
         self.close()
         return 0
 
-    @log.wrap(log.actions.FD_CLOSE, fields=('path',), lib=__name__)
     def close(self):
         """Closes file descriptor"""
         unistd.close(self.fd)
@@ -185,7 +177,7 @@ class FD(Object):
 ### Open modes for regular files
 # create a new file and raise error if it exists, use read mode
 FO_READNEW = 0
-# read only and raise error if it doesn't exists
+# read only and raise error if it doesn't exist
 FO_READEX = 1
 # create a new file and raise error if it exists, use write mode
 FO_WRNEW = 2
@@ -287,11 +279,6 @@ _FOMODE2FUNC = _fo_readnew, _fo_readex, _fo_wrnew, _fo_wrex, _fo_wrextr, \
                _fo_apnew, _fo_apex, _fo_apextr,_fo_read, _fo_write, _fo_append
 
 
-log.register_actions('REGFILE_OPEN', 'REGFILE_READ', 'REGFILE_WRITE',
-                     'REGFILE_PREAD', 'REGFILE_PWRITE', 'REGFILE_MOVE',
-                     'REGFILE_TRUNC')
-
-
 class File(FD):
     """File represents a Regular File's file descriptor."""
 
@@ -316,8 +303,6 @@ class File(FD):
         raise IndexError('wrong index type: %s' % type(index))
 
     @staticmethod
-    @log.wrap(log.actions.REGFILE_OPEN,
-              fields=('fpath', 'oflag', 'mode'), lib=__name__)
     def open(fpath, oflag, mode=0666):
         """Open a file descript for a regular file in fpath using the open mode
         specifie by *oflag* with *mode*"""
@@ -355,7 +340,6 @@ class File(FD):
                 os.close(fd)
 
     @read_check
-    @log.wrap(log.actions.REGFILE_READ, fields=('size', 'pos'), lib=__name__)
     def read(self, size=None, pos=None):
         """Read *pos*-length data starting from position *pos*."""
         size = int(self.size) if size is None else int(size)
@@ -367,7 +351,6 @@ class File(FD):
         return chunk
 
     @read_check
-    @log.wrap(log.actions.REGFILE_PREAD, fields=('size', 'pos'), lib=__name__)
     def pread(self, size=None, pos=None):
         """Read *pos*-length data starting from position *pos*.
         This operation doesn't change the pointer position."""
@@ -379,7 +362,6 @@ class File(FD):
         return chunk
 
     @write_check
-    @log.wrap(log.actions.REGFILE_WRITE, fields=('data', 'pos'), lib=__name__)
     def write(self, data, pos=None, tries=3):
         """Write data starting from position *pos* and do maximum *tries*
         write attempt, if all will fail it raises a IncompleteWrite
@@ -408,7 +390,6 @@ class File(FD):
         self.pos = pos + wlen
 
     @write_check
-    @log.wrap(log.actions.REGFILE_READ, fields=('data', 'pos'), lib=__name__)
     def pwrite(self, data, pos=None, tries=3):
         """Write data starting from position *pos* and do maximum *tries*
         write attempt, if all will fail it raises a IncompleteWrite
@@ -435,7 +416,6 @@ class File(FD):
                 _tries = tries
 
     @write_check
-    @log.wrap(log.actions.REGFILE_TRUNC, fields=('length',), lib=__name__)
     def truncate(self, length=0):
         """Truncate the file and if the pointer is in a inexistent part of file
         it will be moved to the end of file."""
@@ -448,7 +428,6 @@ class File(FD):
         if size > length:
             self.moveto(length)
 
-    @log.wrap(log.actions.REGFILE_MOVE, fields=('pos',), lib=__name__)
     def moveto(self, pos):
         """Move position pointer in position *pos* from start of FD."""
         pos = int(pos)
@@ -456,13 +435,67 @@ class File(FD):
             raise ValueError("invalid negative position: %d" % pos)
         self.pos = pos
 
-    def lines(self, start=None, stop=None, eol='\n', keep_eol=0):
-        """Splits FD's content in lines that end with *eol*, it'll start from
-        *start* position and it'll stop at stop position, if *stop* is None it
-        will stop at the end of FD. If keep_eol is true doesn't remove *eol*
-        from the line"""
-        start = self.pos if start is None else int(start)
-        return xlines(self, eol, keep_eol, start, stop, knp_first)
+    def xlines(self, start=0, stop=None, eol='\n', keep_eol=0, size=4096):
+        """Splits FD's content in lines' boundaries that end with *eol*, it will
+        start from *start* position and it'll stop at stop position, if *stop*
+        is None it will stop at the end of FD. If keep_eol is true doesn't
+        remove *eol* from the line"""
+        line_start = chunk_start = int(start)
+        if start < 0:
+            raise ValueError("negative *start*: %d" % start)
+        stop = len(self) if stop is None else int(stop)
+        if stop < 0:
+            raise ValueError("negative *stop*: %d" % stop)
+        if start > stop:
+            raise ValueError("*stop* must be greater than or euqal to *start*")
+        if size < 0:
+            raise ValueError("negative *size*: %d" % size)
+        eol_len = len(eol)
+        size = max(size, eol_len)
+        chunk = self[chunk_start:chunk_start+max(size, eol_len)]
+        chunk_end = chunk_start + len(chunk)
+        while chunk:
+            pos = chunk.find(eol)
+            if pos < 0:
+                if chunk_end >= stop:
+                    break
+                chunk_start = chunk_end - eol_len
+                chunk_end = min(chunk_start + size, stop)
+                chunk = self[chunk_start:chunk_end]
+            else:
+                chunk_start = chunk_start + pos + eol_len
+                yield line_start, chunk_start if keep_eol else (chunk_start - eol_len)
+                line_start = chunk_start
+                chunk = chunk[pos + eol_len:]
+                if not chunk:
+                    if chunk_start >= stop:
+                        break
+                    chunk_start = chunk_end - eol_len + 1
+                    chunk_end = chunk_start + size
+                    chunk = self[chunk_start:chunk_end]
+
+    def lines(self, start=0, stop=None, eol='\n', keep_eol=0, size=4096):
+        return (self[start:end] for start, end
+                in self.xlines(start, stop, eol, keep_eol, size))
+
+    def get_line(self, lineno, start=None, max_size=None, eol='\n'):
+        lineno = int(lineno)
+        start = int(self.pos if start is None else start)
+        len_eol = len(eol)
+        try:
+            for atline, (start, end) in enumerate(xbounds(self, eol, 1, start, (start + max_size) if max_size is not None else None, knp_first)):
+                if atline == lineno:
+                    if start is None:
+                        return None
+                    if self[end-len_eol:end] == eol:
+                        return self[start:end-len_eol]
+                    else:
+                        return None
+                elif atline > lineno:
+                    return None
+        except StopIteration:
+            return None
+        return None
 
     def chunks(self, size,  start=0, stop=None):
         """Divides FD's content in chunk of length *size* starting from *start*

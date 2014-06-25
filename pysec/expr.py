@@ -33,10 +33,12 @@ Example:
     # False
 
 """
+import inspect
 import operator
 
 from pysec.core import Object
 from pysec import lang
+from pysec.path import match_path as _match_path
 
 
 __all__ = 'Expression', 'var', 'const'
@@ -61,6 +63,8 @@ class Expression(Object):
         func = self.func
         if func is None:
             return values.compute(**kwds) if isinstance(values, Expression) else values
+        elif isinstance(values, dict):
+            return func(**{attr:(val.compute(**kwds) if isinstance(val, Expression) else val) for attr, val in values.iteritems()})
         else:
             return func(*tuple((val.compute(**kwds) if isinstance(val, Expression) else val) for val in values))
 
@@ -217,6 +221,11 @@ class Expression(Object):
     def __ixor__(self, other):
         return Expression((self, other), operator.ixor)
 
+    def __getattr__(self, attr):
+        return Expression((self,), operator.attrgetter(attr))
+
+    def __call__(self, *args, **kwds):
+        return Expression((self, args, kwds), apply)
 
 
 class Variable(Expression):
@@ -231,6 +240,16 @@ class Variable(Expression):
         return kwds[self.name]
 
 
+class FunctionMaker(Object):
+
+    def __init__(self, func):
+        self.func = func
+
+    def __call__(self, *args, **kwds):
+        kwds = inspect.getcallargs(self.func, *args, **kwds)
+        return Expression(kwds, self.func)
+
+
 class VarMaker(Object):
 
     def __getattr__(self, name):
@@ -242,3 +261,10 @@ class VarMaker(Object):
         
 var = VarMaker()
 const = lambda val: Expression(val, None)
+
+
+# utilities
+
+length = FunctionMaker(lambda v: len(v))
+match_path = FunctionMaker(_match_path)
+
