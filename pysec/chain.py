@@ -18,10 +18,12 @@
 #
 # -*- coding: ascii -*-
 """"""
+import string
 import types
 
 from pysec.core import Object
 from pysec import strings
+from pysec.xsplit import xsplit
 
 
 class Filter(Object):
@@ -43,6 +45,9 @@ only_false = Filter(lambda e: not e)
 longer_than = lambda l: Filter(lambda e: len(e) > l)
 shorter_than = lambda l: Filter(lambda e: len(e) < l)
 as_long_as = lambda l: Filter(lambda e: len(e) == l)
+
+eq = lambda v: Filter(lambda e: e == v)
+eq_n = lambda i, v: Filter(lambda e: e[i] == v)
 
 
 def contains(*elements):
@@ -71,4 +76,8 @@ to_str = Parser(str)
 to_repr = Parser(repr)
 to_erepr = Parser(strings.erepr)
 to_len = Parser(len)
+
+split = lambda sep: Parser(lambda val: tuple(xsplit(val, sep)))
+
+strip = lambda sep: Parser(string.strip)
 
