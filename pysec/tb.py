@@ -111,6 +111,7 @@ class Hook(Object):
 
     def handle(self, info=None):
         self.out.write(self.formatter(*(info or sys.exc_info())))
+        self.out.flush()
 
 
 def set_excepthook(fmt, out=sys.stderr):
@@ -217,19 +218,18 @@ def deep_tb(exc_type, exc_value, exc_tb):
             if where is None:
                 val = '<undefined>'
             traceback.append('    %r: %r' % (token, val))
+        traceback.append('  Code:')
+        for ist, lineno, label, op, arg in disassemble(exc_tb.tb_frame.f_code):
+            prefix = '  >> ' if ist == exc_tb.tb_lasti else '   '
+            postfix = ' << %s' % exc_type.__name__ if ist == exc_tb.tb_lasti else ''
+            if lineno == exc_tb.tb_lineno:
+                if arg is NOVAL:
+                    traceback.append('    %s%s%s' % (prefix, op, postfix))
+                else:
+                    traceback.append('    %s%s %r%s' % (prefix, op, arg, postfix))
         prev = exc_tb
         exc_tb = exc_tb.tb_next
         lvl += 1
-    code = prev.tb_frame.f_code
-    traceback.append('Code:')
-    for ist, lineno, label, op, arg in disassemble(prev.tb_frame.f_code):
-        prefix = '>> ' if ist == prev.tb_lasti else '   '
-        postfix = ' << %s' % exc_type.__name__ if ist == prev.tb_lasti else ''
-        if lineno == prev.tb_lineno:
-            if arg is NOVAL:
-                traceback.append('  %s%s%s' % (prefix, op, postfix))
-            else:
-                traceback.append('  %s%s %r%s' % (prefix, op, arg, postfix))
     traceback.append('[ERROR]')
     traceback.append('%s: %r' % (exc_type.__name__, str(exc_value)))
     traceback.append('=========================================\n')

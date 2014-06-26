@@ -68,7 +68,7 @@ def load_db_txt(path):
         state = ST_NAME
         name = None
         signature = None
-        for line in fp.readlines():
+        for line in fp.lines():
             line = line.strip()
             if not line:
                 continue
