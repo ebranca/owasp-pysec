@@ -30,13 +30,6 @@ MASK_NOT_VIS = reduce(lambda a, b: a | b, (1 << ord(ch) for ch in NOT_VISIBLE))
 MASK_ASCII = 2 ** 129 - 1
 MASK_EXT = (2 ** 129 - 1) << 128
 
-"""
-for name, value in locals().copy().iteritems():
-    if name.startswith('MASK'):
-        print '%s:\t%s' % (name, bin(value)[2:])
-import sys
-sys.exit()
-"""
 
 class WildSyntaxError(ValueError):
     pass
