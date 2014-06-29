@@ -19,11 +19,14 @@
 # -*- coding: ascii -*-
 """Log module"""
 from contextlib import contextmanager
-from time import time as _get_time
 import inspect
+from time import time as _get_time
+
+from pysec import config
 from pysec.core import Object
 from pysec.core.monotonic import monotonic
 from pysec import lang
+from pysec.strings import erepr
 
 
 EVENT_START = 0
@@ -37,9 +40,10 @@ EVENT_NAMES = 'start', 'success', 'warning', 'error', 'critical', 'end'
 
 
 __all__ = 'start', 'success', 'warning', 'error', 'critical', 'end', \
-          'start_log', 'LogError', 'wrap', 'ctx', \
+          'start_log', 'start_root_log', 'LogError', 'wrap', 'ctx', \
           'add_local_emit', 'add_global_emit', 'register_action', \
-          'register_actions', 'get_action_code', 'get_action_name', 'errors'
+          'register_actions', 'get_action_code', 'get_action_name', 'errors', \
+          'emit_simple'
 
 
 class LogError(Exception):
@@ -61,9 +65,11 @@ class Logger(Object):
         self.global_emits = []
         self.__local_emits = []
         self._time_offset = _offset or monotonic()
+        if timer is None:
+            timer = get_time
         self.start_time = int(timer if isinstance(timer, (int, long))
                               else timer())
-        self.lib = None if lib is None else str(lib)
+        self.lib = None if not config.keep_lib_log and lib is None else str(lib)
 
     def add_global_emit(self, emitter):
         """Add an emitter for this logger and for its offspring"""
@@ -124,6 +130,17 @@ def start_log(action, fields=None, timer=get_time):
     if frame.f_locals.get('__log__', None):
         raise LogError(lang.LOG_ALREADY_SET)
     frame.f_locals['__log__'] = Logger(action, fields, None, timer)
+
+
+def start_root_log(action, fields=None, timer=get_time):
+    """This function must be called when you want start logging"""
+    prev = frame = inspect.currentframe().f_back
+    while frame:
+        if frame.f_locals.get('__log__', None):
+            raise LogError(lang.LOG_ALREADY_SET)
+        prev = frame
+        frame = frame.f_back
+    prev.f_locals['__log__'] = Logger(action, fields, None, timer)
 
 
 def push_log(frame, action, fields=None, lib=None):
@@ -522,13 +539,16 @@ def save_actions(fact):
 
 
 # simple emitter
-def print_emitter(event, time, actions, errcode, fields, info, lib):
-    actions = '<%s>' % ', '.join(get_action_name(act) for act in actions)
+def emit_simple(event, time, actions, errcode, fields, info, lib):
+    if lib:
+        return
     if event in (EVENT_WARNING, EVENT_ERROR, EVENT_CRITICAL):
-        print '[%s] (%d) %r ERR:%r %r %r' % (EVENT_NAMES[event], time,
-                                             actions,
-                                             get_error_name(errcode),
-                                             fields, info)
+        print '[%s] (%d) <%s> ERR:%r %r %r' % (EVENT_NAMES[event], time,
+                                               erepr(get_action_name(actions[-1])),
+                                               erepr(get_error_name(errcode)),
+                                               fields, info)
     else:
-        print '[%s] (%d) %r %r %r' % (EVENT_NAMES[event], time,
-                                      actions, fields, info)
+        print '[%s] (%d) <%s> %r %r' % (EVENT_NAMES[event], time,
+                                        erepr(get_action_name(actions[-1])),
+                                        fields, info)
+
