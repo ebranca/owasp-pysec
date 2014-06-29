@@ -219,13 +219,13 @@ def deep_tb(exc_type, exc_value, exc_tb):
             traceback.append('    %r: %r' % (token, val))
         traceback.append('  Code:')
         for ist, lineno, label, op, arg in disassemble(exc_tb.tb_frame.f_code):
-            prefix = '  >> ' if ist == exc_tb.tb_lasti else '   '
+            prefix = '>> ' if ist == exc_tb.tb_lasti else '   '
             postfix = ' << %s' % exc_type.__name__ if ist == exc_tb.tb_lasti else ''
             if lineno == exc_tb.tb_lineno:
                 if arg is NOVAL:
-                    traceback.append('    %s%s%s' % (prefix, op, postfix))
+                    traceback.append('  %s%s%s' % (prefix, op, postfix))
                 else:
-                    traceback.append('    %s%s %r%s' % (prefix, op, arg, postfix))
+                    traceback.append('  %s%s %r%s' % (prefix, op, arg, postfix))
         exc_tb = exc_tb.tb_next
         lvl += 1
     traceback.append('[ERROR]')
