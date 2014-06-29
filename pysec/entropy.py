@@ -18,15 +18,14 @@
 #
 # -*- coding: ascii -*-
 import math
-from types import DictType
 
-from pysec.core import Object
+from pysec.core import Dict
 from pysec import lang
 
 __all__ = 'Entropy', 'ent_bytes'
 
 
-class Entropy(DictType):
+class Entropy(Dict):
 
     def __init__(self, *symbols, **freqs):
         super(Entropy, self).__init__((sym, 0) for sym in symbols)
