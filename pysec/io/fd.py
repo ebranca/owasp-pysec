@@ -487,7 +487,7 @@ class File(FD):
         eol = str(eol)
         len_eol = len(eol)
         try:
-            for atline, (start, end) in enumerate(self.xlines(start, (None if max_size is None else start + mex_size), eol, 1)):
+            for atline, (start, end) in enumerate(self.xlines(start, (None if max_size is None else start + max_size), eol, 1)):
                 if atline == lineno:
                     line = self[start:end]
                     if not line:
