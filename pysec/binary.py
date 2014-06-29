@@ -170,7 +170,7 @@ def byte_msearch(text, patterns, offset=0):
         while actual_trees:
             tree = actual_trees.pop()
             if tree.eop:
-                yield t, [node.token for node in reversed(tuple(node.ancestors())[:-1])], tree.name
+                yield t, [node.token for node in reversed(tuple(tree.ancestors())[:-1])], tree.name
                 tree.eop = 0
             for pc, node in tree.items():
                 if isinstance(pc, str):
