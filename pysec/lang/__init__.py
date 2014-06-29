@@ -82,5 +82,4 @@ def set_lang(locale):
         msg = getattr(loc, name, None)
         if isinstance(msg, str):
             globals()[name] = msg
-    _default = locale
 
