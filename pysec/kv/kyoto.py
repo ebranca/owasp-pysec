@@ -114,7 +114,6 @@ class KyotoKV(kv.HardKV):
         return list(self.iteritems())
 
     def iteritems(self):
-        parse = self.parse
         unparse = self.unparse
         try:
             cursor = self.fk.cursor()
@@ -131,7 +130,6 @@ class KyotoKV(kv.HardKV):
         return list(self.itervalues())
 
     def itervalues(self):
-        unparse = self.unparse
         return (value for _, value in self.iteritems())
 
     def keys(self):
