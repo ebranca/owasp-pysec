@@ -138,7 +138,7 @@ def ilen(gen, max=None):
         max = int(max)
         if max < 0:
             raise ValueError("invalid negative max: %d" % max)
-        for i in xrange(max):
+        for i in xrange(0, max):
             try:
                 gen.next()
             except StopIteration:
