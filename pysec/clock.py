@@ -27,7 +27,8 @@ class Timeout(Error):
     pass
 
 
-RAISE_TIMEOUT = object()
+RAISE_TIMEOUT = Object()
+
 
 def timeout(timeout, default=RAISE_TIMEOUT):
     """Decorator for functions, if the returned function doesn't terminate
