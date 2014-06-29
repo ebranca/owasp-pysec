@@ -20,7 +20,6 @@
 """Various utilities for strings manipulation."""
 from pysec import lang
 from pysec.utils import xrange, eq
-from pysec.xsplit import xbounds
 
 
 def erepr(s):
