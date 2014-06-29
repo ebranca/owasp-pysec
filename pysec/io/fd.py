@@ -18,14 +18,14 @@
 #
 # -*- coding: ascii -*-
 """Contains FD and FD-like classes for operations with file descriptors"""
-from pysec.core import Error, Object, unistd, dirent
-from pysec.xsplit import xbounds
-from pysec.alg import knp_first
-from pysec.io import fcheck
-from pysec.utils import xrange
 import os
 import fcntl
 
+from pysec.core import Error, Object, unistd, dirent
+from pysec.xsplit import xbounds
+from pysec.io import fcheck
+from pysec.utils import xrange
+from pysec import check
 
 
 class FDError(Error):
@@ -278,7 +278,6 @@ FO_READNEW, FO_READEX, FO_WRNEW, FO_WREX, FO_WREXTR, \
 _FOMODE2FUNC = _fo_readnew, _fo_readex, _fo_wrnew, _fo_wrex, _fo_wrextr, \
                _fo_apnew, _fo_apex, _fo_apextr,_fo_read, _fo_write, _fo_append
 
-
 class File(FD):
     """File represents a Regular File's file descriptor."""
 
@@ -303,6 +302,7 @@ class File(FD):
         raise IndexError('wrong index type: %s' % type(index))
 
     @staticmethod
+    @check.delimit('fd-reg-open')
     def open(fpath, oflag, mode=0666):
         """Open a file descript for a regular file in fpath using the open mode
         specifie by *oflag* with *mode*"""
@@ -478,21 +478,22 @@ class File(FD):
         return (self[start:end] for start, end
                 in self.xlines(start, stop, eol, keep_eol, size))
 
+    def readlines(self):
+        return list(self.lines())
+
     def get_line(self, lineno, start=None, max_size=None, eol='\n'):
         lineno = int(lineno)
         start = int(self.pos if start is None else start)
+        eol = str(eol)
         len_eol = len(eol)
         try:
-            for atline, (start, end) in enumerate(xbounds(self, eol, 1, start, (start + max_size) if max_size is not None else None, knp_first)):
+            for atline, (start, end) in enumerate(self.xlines(start, (None if max_size is None else start + mex_size), eol, 1)):
                 if atline == lineno:
-                    if start is None:
+                    line = self[start:end]
+                    if not line:
                         return None
-                    if self[end-len_eol:end] == eol:
-                        return self[start:end-len_eol]
                     else:
-                        return None
-                elif atline > lineno:
-                    return None
+                        return line[:-len_eol]
         except StopIteration:
             return None
         return None
@@ -575,3 +576,4 @@ class CharDev(FD):
 class FIFO(FD):
     """File represents a FIFO's file descriptor."""
     pass
+
