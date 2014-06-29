@@ -185,7 +185,7 @@ def long_tb(exc_type, exc_value, exc_tb, max_length=80):
         path = os.path.abspath(exc_tb.tb_frame.f_code.co_filename)
         lineno = exc_tb.tb_lineno - 1
         traceback.append('[%d]' % lvl)
-        traceback.append('  Where: %r:%d %r' % (path, lineno, exc_tb.tb_frame.f_code.co_name))
+        traceback.append('  Where: %r:%d %r' % (path, lineno+1, exc_tb.tb_frame.f_code.co_name))
         with fd.File.open(path, fd.FO_READEX) as src:
             line = src.get_line(lineno)
         traceback.append('  Line: %r' % line.strip())
@@ -203,7 +203,6 @@ def long_tb(exc_type, exc_value, exc_tb, max_length=80):
 def deep_tb(exc_type, exc_value, exc_tb):
     traceback = ['=== Traceback (most recent call last) ===']
     lvl = 0
-    prev = None
     while exc_tb:
         path = os.path.abspath(exc_tb.tb_frame.f_code.co_filename)
         lineno = exc_tb.tb_lineno
@@ -227,7 +226,6 @@ def deep_tb(exc_type, exc_value, exc_tb):
                     traceback.append('    %s%s%s' % (prefix, op, postfix))
                 else:
                     traceback.append('    %s%s %r%s' % (prefix, op, arg, postfix))
-        prev = exc_tb
         exc_tb = exc_tb.tb_next
         lvl += 1
     traceback.append('[ERROR]')
