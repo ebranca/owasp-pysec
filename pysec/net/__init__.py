@@ -18,4 +18,4 @@
 #
 # -*- coding: ascii -*-
 """Implementations of protocols and utilities for networking"""
-from pysec.net import error, pop, smtp
+

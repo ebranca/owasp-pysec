@@ -17,10 +17,6 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-from pysec.core import (memory,
-                        monotonic,
-                        unistd)
-
 
 class Object(object):
     pass
@@ -28,3 +24,4 @@ class Object(object):
 
 class Error(Object, Exception):
     pass
+

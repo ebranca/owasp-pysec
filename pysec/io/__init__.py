@@ -17,11 +17,4 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-from pysec.io import (fcheck,
-                      fd,
-                      fs,
-                      temp,
-                      utils)
-
-from pysec.io.utils import *
 

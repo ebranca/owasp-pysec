@@ -17,5 +17,4 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-from pysec.kv.kv import *
-from pysec.kv.simple import SimpleKV
+
