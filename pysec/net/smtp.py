@@ -1,6 +1,5 @@
 import socket
 import select
-from functools import partial
 import errno
 
 from pysec.core import memory, Object
