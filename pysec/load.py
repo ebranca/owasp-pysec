@@ -46,7 +46,7 @@ from pysec import lang
 
 __name__ = 'pysec.load'
 
-__all__ = 'load_tab', 'import_lib', 'make_line'
+__all__ = 'load_tab', 'importlib', 'make_line'
 
 
 # set actions
