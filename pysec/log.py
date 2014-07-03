@@ -31,6 +31,7 @@ from pysec.strings import erepr
 
 EVENT_START = 0
 EVENT_SUCCESS = 1
+EVENT_OK = EVENT_SUCCESS
 EVENT_WARNING = 2
 EVENT_ERROR = 3
 EVENT_CRITICAL = 4
@@ -544,11 +545,11 @@ def emit_simple(event, time, actions, errcode, fields, info, lib):
         return
     if event in (EVENT_WARNING, EVENT_ERROR, EVENT_CRITICAL):
         print '[%s] (%d) <%s> ERR:%r %r %r' % (EVENT_NAMES[event], time,
-                                               erepr(get_action_name(actions[-1])),
+                                               erepr(get_action_name(actions[0])),
                                                erepr(get_error_name(errcode)),
                                                fields, info)
     else:
         print '[%s] (%d) <%s> %r %r' % (EVENT_NAMES[event], time,
-                                        erepr(get_action_name(actions[-1])),
+                                        erepr(get_action_name(actions[0])),
                                         fields, info)
 
