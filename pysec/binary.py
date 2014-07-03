@@ -1,5 +1,8 @@
 #!/usr/bin/python -OOBRStt
 """"""
+from pysec.core import is_int, is_str, is_dict
+
+
 SPECIAL_CHARS = '\\', '*', '?', '!', '[', ']', '{', '}', '-', ',', '#', '@'
 
 ALPHA = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -104,7 +107,7 @@ BACKSLASH_ORD = ord('\\')
 
 
 MASK_NONE_CHAR = 0
-MASK_ALL_CHAR = 2 ** 257 - 1
+MASK_ALL_CHAR = object()
 MASK_PRINT = reduce(lambda a, b: a | b, (1 << ord(ch) for ch in PRINTABLE))
 MASK_NOT_PRINT = (2 ** 0x20) - 1
 MASK_ALPHNUM = reduce(lambda a, b: a | b, (1 << ord(ch) for ch in ALPHANUMERIC))
@@ -186,6 +189,8 @@ def byte_search(text, pattern, offset=0):
                 p += 1
             else:
                 p = 0
+        elif pc is MASK_ALL_CHAR:
+            p += 1
         elif isinstance(pc, (int, long)):
             if pc & (1 << (ord(tc) + 1)):
                 p += 1
@@ -229,7 +234,7 @@ class SearchTree(object):
 
 
 def byte_msearch(text, patterns, offset=0):
-    if isinstance(patterns, dict):
+    if is_dict(patterns):
         patterns = patterns.iteritems()
     else:
         patterns = ((p, None) for p in patterns)
@@ -258,12 +263,16 @@ def byte_msearch(text, patterns, offset=0):
                 yield t, [node.token for node in reversed(tuple(tree.ancestors())[:-1])], tree.name
                 tree.eop = 0
             for pc, node in tree.items():
-                if isinstance(pc, str):
+                if is_str(pc):
+                    pc = str(pc)
                     if pc == tc:
                         next_trees.add(node)
                     else:
                         next_trees.add(root)
-                elif isinstance(pc, (int, long)):
+                elif pc is MASK_ALL_CHAR:
+                    next_trees.add(node)
+                elif is_int(pc):
+                    pc = int(pc)
                     if pc & (1 << (ord(tc) + 1)):
                         next_trees.add(node)
                     else:
@@ -272,3 +281,4 @@ def byte_msearch(text, patterns, offset=0):
                     raise Exception("unknown token: %r" % pc)
         actual_trees = next_trees
         t += 1
+
