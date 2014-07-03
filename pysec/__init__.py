@@ -22,6 +22,7 @@ import sys
 
 from pysec import config
 from pysec import core
+from pysec.io import fd
 from pysec import lang
 from pysec import log
 from pysec import tb
@@ -32,7 +33,6 @@ REMOVE_BUILTINS = 'eval', 'execfile'
 
 
 def set_builtins():
-    from pysec.io import fd
     _OPEN_MODES = {
         'r': fd.FO_READEX,
         'w': fd.FO_WRITE,
