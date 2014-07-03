@@ -95,3 +95,9 @@ def match_path(path, patterns, abspath=0, case_sensitive=1):
 def filter_paths(paths, whitelist=('*',), blacklist=(), case_sensitive=()):
     return (path for path in paths if match_path(path, whitelist) and not match_path(path, blacklist))
 
+
+def flat_walk(root='./'):
+    for dirpath, dirnames, filenames in os.wlk(root):
+        for fname in filenames:
+            yield os.path.join(dirpath, fname)
+
