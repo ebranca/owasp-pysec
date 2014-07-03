@@ -17,11 +17,91 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
+from pysec.core import taint
+
+_dict = type({})
+_list = type([])
+_set = type({1, 2})
+_str = type('')
+_tuple = type(())
+
+
 
 class Object(object):
-    pass
+
+    __metaclass__ = taint.Taint
 
 
 class Error(Object, Exception):
     pass
 
+
+class String(Object, _str):
+    pass
+
+
+class List(Object, _list):
+    pass
+
+
+class Dict(Object, _dict):
+    pass
+
+
+class Set(Object, _set):
+    pass
+
+
+class Tuple(Object, _tuple):
+    pass
+
+
+
+def all_attrs(obj):
+    tp = type(obj)
+    return {attr for cls in (getattr(tp, '__mro__', None) or (getattr(tp, '__bases__', ()) + (tp,))) for attr in cls.__dict__ }
+
+
+NO_OBJ = object()
+
+
+def is_duck(obj, duck=NO_OBJ, *args):
+    if duck is NO_OBJ:
+        args = set(args)
+    else:
+        if args:
+            raise ValueError()
+        args = all_attrs(duck)
+    return all_attrs(obj) == args
+
+
+def is_superduck(obj, duck=NO_OBJ, *args):
+    if duck is NO_OBJ:
+        args = set(args)
+    else:
+        if args:
+            raise ValueError()
+        args = all_attrs(duck)
+    return all_attrs(obj) >= args
+
+
+def is_subduck(obj, duck=NO_OBJ, *args):
+    if duck is NO_OBJ:
+        args = set(args)
+    else:
+        if args:
+            raise ValueError()
+        args = all_attrs(duck)
+    return all_attrs(obj) <= args
+
+
+def is_int(obj):
+    return isinstance(obj, (int, long))
+
+
+def is_str(obj):
+    return isinstance(obj, (_str, String))
+
+
+def is_dict(obj):
+    return isinstance(obj, (_dict, Dict))
