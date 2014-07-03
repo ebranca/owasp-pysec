@@ -64,6 +64,10 @@ def xrange(*args):
         act += step
 
 
+def range(*args):
+    return list(xrange(*args))
+
+
 def top_n(values, first_n=10):
     """Returns the *n* greatest objects in values"""
     values = iter(values)
