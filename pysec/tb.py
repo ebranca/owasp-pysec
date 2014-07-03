@@ -27,6 +27,7 @@ import tokenize
 
 from pysec.core import Object
 from pysec.io import fd
+from pysec.strings import erepr
 from pysec.xsplit import xlines
 
 
@@ -216,7 +217,9 @@ def deep_tb(exc_type, exc_value, exc_tb):
         for token, where, val in linevars(line.strip(), exc_tb.tb_frame):
             if where is None:
                 val = '<undefined>'
-            traceback.append('    %r: %r' % (token, val))
+            else:
+                val = '[%s] %r' % (erepr(getattr(type(val), '__name__', type(val))), val)
+            traceback.append('    %r: %s' % (token, val))
         traceback.append('  Code:')
         for ist, lineno, label, op, arg in disassemble(exc_tb.tb_frame.f_code):
             prefix = '>> ' if ist == exc_tb.tb_lasti else '   '
