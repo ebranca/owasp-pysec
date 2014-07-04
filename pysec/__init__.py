@@ -44,16 +44,17 @@ def set_builtins():
             raise ValueError(lang.WRONG_OPEN_MODE % mode)
         return fd.File.open(path, mode)
     BUILTINS = {
-        'dict': core.Dict,
+        # 'dict': core.Dict,
         'file': open,
         'input': raw_input,
         'list': core.List,
         'object': core.Object,
         'open': open,
-        'set': core.Set,
-        'str': core.String,
-        'tuple': core.Tuple,
-        'xrange': utils.xrange
+        # 'set': core.Set,
+        # 'str': core.String,
+        # 'tuple': core.Tuple,
+        'xrange': utils.xrange,
+        'range': utils.range
     }
     def not_implemented(name):
         def _not_implemented(*arg, **kwds):
