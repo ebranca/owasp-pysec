@@ -23,15 +23,20 @@ from pysec.strings import erepr
 from pysec import tb
 
 
+MAX_LINE = 4096
 
+
+# register actions
 ACT_LOADDB = log.register_action('LOAD_DB')
 ACT_SCANFILE = log.register_action('SCAN_FILE')
 ACT_CALCOFFSET = log.register_action('CALCULATE_OFFSET')
 ACT_SEARCHSIGNS = log.register_action('SEARCH_SIGNATURES')
 
 
+# register errors
 ERR_WRONGFMT = log.register_error('WRONG_FILE_FORMAT')
 ERR_NOTFOUND = log.register_error('SIGNATURE_NOT_FOUND')
+ERR_LINETOOBIG = log.register_error('LINE_TOO_LONG')
 
 
 DOS_HEADER = '<HHHHHHHHHHHHHH8sHH20sI'
@@ -67,14 +72,18 @@ def sign2bmask(sign):
     return ''.join(mask)
 
 
-def load_db(path):
+@log.wrap(ACT_LOADDB, ('db_path',))
+def load_db(db_path):
     db = {}
-    with fd.File.open(path, fd.FO_READEX) as fp:
+    with fd.File.open(db_path, fd.FO_READEX) as fp:
         state = ST_NAME
         name = None
         signature = None
-        for line in fp.lines():
-            line = line.strip()
+        for start, stop in fp.xlines():
+            if stop - start >= MAX_LINE:
+                log.error(ERR_LINETOOBIG, start=start, end=end)
+                continue
+            line = fp[start:stop].strip()
             if not line or line[:1] == ';':
                 continue
             if state == ST_NAME:
@@ -131,7 +140,7 @@ def emit_pipe(event, time, actions, errcode, fields, info, lib):
         sys.stdout.write('|'.join(('WRONGFMT', repr(fields['path']), '', '')))
         sys.stdout.write('\n')
     sys.stdout.flush()
-        
+
 
 def _pescan():
     opts = docopt(__doc__)
@@ -140,6 +149,8 @@ def _pescan():
         emitter = emit_human
     elif emitter == 'pipe':
         emitter = emit_pipe
+    elif emitter == 'classic':
+        emitter = log.emit_simple
     else:
         raise ValueError("Unknown log type")
     #
@@ -147,28 +158,27 @@ def _pescan():
     #
     db_path = os.path.abspath(opts['--db'])
     paths = opts['<PATH>']
-    with log.ctx(ACT_LOADDB, {'db': db_path}):
-        db = load_db(db_path)
-        log.success()
+    #
+    db = load_db(db_path)
     for path in paths:
         path = os.path.abspath(path)
         for path in glob.iglob(path):
             if not os.path.isfile(path):
                 continue
-            with log.ctx(ACT_SCANFILE, {'path': path}):
-                with fd.File.open(path, fd.FO_READEX) as fp:
-                    with log.ctx(ACT_CALCOFFSET):
-                        offset = get_offset(fp)
-                        if offset is None:
-                            log.error(ERR_WRONGFMT, size=len(fp))
-                            continue
-                        log.ok(offset=offset)
-                    with log.ctx(ACT_SEARCHSIGNS):
-                        n = -1
-                        for n, (pos, pattern, name) in enumerate(binary.byte_msearch(fp, db, offset)):
-                            log.success(n=n, pos=pos, name=name)
-                        if n == -1:
-                            log.error(ERR_NOTFOUND)
+            with log.ctx(ACT_SCANFILE, {'path': path}), \
+                 fd.File.open(path, fd.FO_READEX) as fp:
+                with log.ctx(ACT_CALCOFFSET):
+                    offset = get_offset(fp)
+                    if offset is None:
+                        log.error(ERR_WRONGFMT, size=len(fp))
+                        continue
+                    log.ok(offset=offset)
+                with log.ctx(ACT_SEARCHSIGNS):
+                    n = -1
+                    for n, (pos, pattern, name) in enumerate(binary.byte_msearch(fp, db, offset)):
+                        log.success(n=n, pos=pos, name=name)
+                    if n == -1:
+                        log.error(ERR_NOTFOUND)
 
 
 if __name__ == '__main__':
