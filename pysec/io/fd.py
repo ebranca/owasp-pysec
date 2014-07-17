@@ -20,7 +20,7 @@
 """Contains FD and FD-like classes for operations with file descriptors"""
 import os
 
-from pysec.core import Error, Object, unistd, dirent, fcntl
+from pysec.core import Error, Object, unistd, dirent, fcntl, stat
 from pysec.io import fcheck
 from pysec.utils import xrange
 from pysec import check
@@ -468,10 +468,9 @@ class Directory(FD):
     def __init__(self, fd, origin=None):
         super(self.__class__, self).__init__(fd)
         self.origin = os.path.abspath(origin)
-        # self.pos = 0
 
     @staticmethod
-    def open(path):
+    def open(path, create=0, mode=0755):
         """Open a file descriptor for a directory path using read-only mode.
         We keep a copy of the directory path within the object for future
         reference. The object created will keep a file descriptor opened for
@@ -479,9 +478,11 @@ class Directory(FD):
         fd = -1
         path = os.path.abspath(path)
         try:
-            fd = dirent.opendir(path)
+            if create:
+                fd = stat.mkdir(path, mode)
+            else:
+                fd = dirent.opendir(path)
             fd = Directory(fd, path)
-            fd.path = path
         except:
             if fd > -1:
                 os.close(fd)
