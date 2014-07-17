@@ -488,6 +488,29 @@ class Directory(FD):
             raise
         return fd
 
+    def openat(self, fpath, oflags, mode=0644):
+        """Open a file descript for a regular file in fpath using the open mode
+        specifie by *oflag* with *mode*"""
+        _oflags = FOFLAGS2OFLAGS.get(int(oflags), None)
+        if oflags is None:
+            raise ValueError("unknown file open mode: %r" % oflags)
+        mode = int(mode)
+        if not fcheck.mode_check(mode):
+            raise ValueError("wrong mode: %r" % oct(mode))
+        fd = -1
+        try:
+            fd = fcntl.openat(int(self), fpath, _oflags, mode) \
+                 if oflags in _FO_NEW_FLAGS \
+                 else fcntl.openat(int(self), fpath, _oflags)
+            if oflags in _FO_NEW_FLAGS and not fcheck.ino_check(int(fd)):
+                raise OSError("not enough free inodes")
+            fd = File(fd)
+        except:
+            if fd > -1:
+                unistd.close(fd)
+            raise
+        return fd
+
     def readdir(self):
         """Return a set of tuple (inode, name) for each file contained in this
         directory"""
