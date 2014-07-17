@@ -19,10 +19,8 @@
 # -*- coding: ascii -*-
 """Contains FD and FD-like classes for operations with file descriptors"""
 import os
-import fcntl
 
-from pysec.core import Error, Object, unistd, dirent
-from pysec.xsplit import xbounds
+from pysec.core import Error, Object, unistd, dirent, fcntl
 from pysec.io import fcheck
 from pysec.utils import xrange
 from pysec import check
@@ -59,7 +57,7 @@ def read_check(func):
     """Decorator to control read permission in reader methods"""
     def _read(fd, *args, **kargs):
         """*func* wrapped with read check"""
-        if not fd.flags & os.O_WRONLY:
+        if not fd.flags & fcntl.O_WRONLY:
             return func(fd, *args, **kargs)
         raise NotReadableFD(fd)
     return _read
@@ -69,7 +67,7 @@ def write_check(func):
     """Decorator to control write permission in writer methods"""
     def _write(fd, *args, **kargs):
         """*func* wrapped with write check"""
-        if fd.flags & os.O_WRONLY or fd.flags & os.O_APPEND:
+        if fd.flags & fcntl.O_WRONLY or fd.flags & fcntl.O_APPEND:
             return func(fd, *args, **kargs)
         raise NotWriteableFD(fd)
     return _write
@@ -195,88 +193,40 @@ FO_APEXTR = 7
 FO_READ = 8
 # open the file in write-only mode, if it doesn't exist create it
 FO_WRITE = 9
+# open the file in write-only mode, truncate to zero length or create file for writing
+FO_WRITETR = 10
 # open the file in append mode, if it doesn't exist create it
-FO_APPEND = 10
+FO_APPEND = 11
 
 
-_FO_NEW_MODES = FO_READNEW, FO_WRNEW, FO_APNEW, FO_READ, FO_WRITE, FO_APPEND
+_FO_NEW_FLAGS = FO_READNEW, FO_WRNEW, FO_APNEW, FO_READ, FO_WRITE, FO_APPEND, FO_WRITETR 
 
 
-FO_MODES = FO_READNEW, FO_READEX, FO_WRNEW, FO_WREX, FO_WREXTR, \
-           FO_APNEW, FO_APEX, FO_APEXTR, FO_READ, FO_WRITE, FO_APPEND
+FOFLAGS2OFLAGS = {
+    FO_READNEW: fcntl.O_RDONLY | fcntl.O_CREAT | fcntl.O_EXCL,
+    FO_READEX:  fcntl.O_RDONLY,
+    FO_WRNEW:   fcntl.O_WRONLY | fcntl.O_CREAT | fcntl.O_EXCL,
+    FO_WREX:    fcntl.O_WRONLY,
+    FO_WREXTR:  fcntl.O_WRONLY | fcntl.O_TRUNC,
+    FO_APNEW:   fcntl.O_WRONLY | fcntl.O_APPEND | fcntl.O_CREAT | fcntl.O_EXCL,
+    FO_APEX:    fcntl.O_WRONLY | fcntl.O_APPEND,
+    FO_APEXTR:  fcntl.O_WRONLY | fcntl.O_APPEND | fcntl.O_TRUNC,
+    FO_READ:    fcntl.O_RDONLY | fcntl.O_CREAT,
+    FO_WRITE:   fcntl.O_WRONLY | fcntl.O_CREAT,
+    FO_WRITETR: fcntl.O_WRONLY | fcntl.O_CREAT | fcntl.O_TRUNC,
+    FO_APPEND:  fcntl.O_WRONLY | fcntl.O_APPEND | fcntl.O_CREAT
+}
 
 
-def _fo_readnew(fpath, mode):
-    """Creates and open a regular file in read-only mode,
-    raises an error if it exists"""
-    return os.open(fpath, os.O_RDONLY | os.O_CREAT | os.O_EXCL, mode)
+NAME2FOFLAGS = {
+    'r': FO_READNEW,
+    'rb': FO_READNEW,
+    'w': FO_WRITETR,
+    'wb': FO_WRITETR,
+    'a': FO_APPEND,
+    'ab': FO_APPEND,
+}
 
-
-def _fo_readex(fpath, _):
-    """Opens a regular file in read-only mode,
-    raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_RDONLY)
-
-
-def _fo_wrnew(fpath, mode):
-    """Creates and opens a regular file in write-only,
-    raises an error if it exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
-
-
-def _fo_wrex(fpath, _):
-    """Opens a regular file in write-only mode,
-    raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_WRONLY)
-
-    
-def _fo_wrextr(fpath, _):
-    """Opens a regular file in write-only mode and truncates it,
-    raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_TRUNC)
-    
-
-def _fo_apnew(fpath, mode):
-    """Creates and opens a regular file in append mode,
-    raises an error if it exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_EXCL, mode)
-
-
-def _fo_apex(fpath, _):
-    """Opens a regular file in append mode,
-    raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_APPEND)
-
-
-def _fo_apextr(fpath, _):
-    """Opens a regular file in append mode and truncates it,
-    raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_APPEND | os.O_TRUNC)
-
-
-def _fo_read(fpath, mode):
-    """Opens a regular file in read-only mode,
-    if it doesn't exist a new file will be created"""
-    return os.open(fpath, os.O_RDONLY | os.O_CREAT, mode)
-
-
-def _fo_write(fpath, mode):
-    """Opens a regular file in write-only mode,
-    if it doesn't exist a new file will be created"""
-    return os.open(fpath, os.O_WRONLY | os.O_CREAT, mode)
-
-
-def _fo_append(fpath, mode):
-    """Opens a regular file in append mode,
-    if it doesn't exist a new file will be created"""
-    return os.open(fpath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, mode)
-
-
-FO_READNEW, FO_READEX, FO_WRNEW, FO_WREX, FO_WREXTR, \
-           FO_APNEW, FO_APEX, FO_READ, FO_WRITE, FO_APPEND
-
-_FOMODE2FUNC = _fo_readnew, _fo_readex, _fo_wrnew, _fo_wrex, _fo_wrextr, \
-               _fo_apnew, _fo_apex, _fo_apextr,_fo_read, _fo_write, _fo_append
 
 class File(FD):
     """File represents a Regular File's file descriptor."""
@@ -303,25 +253,25 @@ class File(FD):
 
     @staticmethod
     @check.delimit('fd-reg-open')
-    def open(fpath, oflag, mode=0666):
+    def open(fpath, oflags, mode=0666):
         """Open a file descript for a regular file in fpath using the open mode
         specifie by *oflag* with *mode*"""
-        oflag = int(oflag)
-        if oflag not in FO_MODES:
-            raise ValueError("unknown file open mode: %r" % oflag)
+        _oflags = FOFLAGS2OFLAGS.get(int(oflags), None)
+        if oflags is None:
+            raise ValueError("unknown file open mode: %r" % oflags)
         mode = int(mode)
         if not fcheck.mode_check(mode):
             raise ValueError("wrong mode: %r" % oct(mode))
-        fopen = _FOMODE2FUNC[oflag]
         fd = -1
         try:
-            fd = fopen(fpath, mode)
-            fd = File(fd)
-            if mode in _FO_NEW_MODES and not fcheck.ino_check(int(fd)):
+            fd = fcntl.open(fpath, _oflags, mode) if oflags in _FO_NEW_FLAGS \
+                 else fcntl.open(fpath, _oflags)
+            if oflags in _FO_NEW_FLAGS and not fcheck.ino_check(int(fd)):
                 raise OSError("not enough free inodes")
+            fd = File(fd)
         except:
             if fd > -1:
-                os.close(fd)
+                unistd.close(fd)
             raise
         return fd
 
@@ -334,10 +284,10 @@ class File(FD):
             raise ValueError("wrong mode: %r" % oct(mode))
         fd = -1
         try:
-            fd = os.open(fpath, os.O_RDONLY | os.O_CREAT, mode)
+            fd = fcntl.open(fpath, fcntl.O_RDONLY | fcntl.O_CREAT, mode)
         finally:
             if fd >= 0:
-                os.close(fd)
+                unistd.close(fd)
 
     @read_check
     def read(self, size=None, pos=None):
@@ -424,7 +374,7 @@ class File(FD):
         if length < 0:
             raise ValueError("negative length: %r" % length)
         size = self.size
-        os.ftruncate(fd, length)
+        unistd.ftruncate(fd, length)
         if size > length:
             self.moveto(length)
 
@@ -458,18 +408,21 @@ class File(FD):
             pos = chunk.find(eol)
             if pos < 0:
                 if chunk_end >= stop:
+                    if chunk:
+                        yield line_start, stop
                     break
                 chunk_start = chunk_end - eol_len
                 chunk_end = min(chunk_start + size, stop)
                 chunk = self[chunk_start:chunk_end]
             else:
                 chunk_start = chunk_start + pos + eol_len
+                if chunk_start > stop:
+                    yield line_start, min((chunk_start if keep_eol else (chunk_start - eol_len)), stop)
+                    break
                 yield line_start, chunk_start if keep_eol else (chunk_start - eol_len)
                 line_start = chunk_start
                 chunk = chunk[pos + eol_len:]
                 if not chunk:
-                    if chunk_start >= stop:
-                        break
                     chunk_start = chunk_end - eol_len + 1
                     chunk_end = chunk_start + size
                     chunk = self[chunk_start:chunk_end]
