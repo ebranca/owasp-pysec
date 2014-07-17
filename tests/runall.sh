@@ -20,3 +20,5 @@
 python -B ./imp_mod.py
 echo
 python -B ./log_test.py
+echo
+./io_tests/test_runall.sh
