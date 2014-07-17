@@ -18,9 +18,8 @@
 #
 # -*- coding: ascii -*-
 import os
-import kv
 import kyotocabinet as kyoto
-from pysec import log
+from pysec import log, kv
 
 
 __name__ = 'pysec.kv.kyoto'

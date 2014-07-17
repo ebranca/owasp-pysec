@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-from kv import HardKV
+from pysec.kv import HardKV
 
 
 class RotationKV(HardKV):
