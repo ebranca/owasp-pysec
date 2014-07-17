@@ -97,7 +97,7 @@ def filter_paths(paths, whitelist=('*',), blacklist=(), case_sensitive=()):
 
 
 def flat_walk(root='./'):
-    for dirpath, dirnames, filenames in os.wlk(root):
+    for dirpath, dirnames, filenames in os.walk(root):
         for fname in filenames:
             yield os.path.join(dirpath, fname)
 
