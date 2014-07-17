@@ -33,10 +33,10 @@ class Taint(type):
                 tags = []
                 for arg in args:
                     tainted = tainted or getattr(arg, '__tainted__', 0)
-                    tags.extends(getattr(arg, '__tainttags__', ()))
+                    tags.extend(getattr(arg, '__tainttags__', ()))
                 for arg in kwds.itervalues():
                     tainted = tainted or getattr(arg, '__tainted__', 0)
-                    tags.extends(getattr(arg, '__tainttags__', ()))
+                    tags.extend(getattr(arg, '__tainttags__', ()))
                 res = func(*args, **kwds)
                 res.__tainted__ = tainted
                 res.__tags__ = tags
