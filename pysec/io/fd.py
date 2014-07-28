@@ -53,6 +53,15 @@ class IncompleteWrite(FDError):
         self.size = int(size)
 
 
+class WrongFileType(FDError):
+
+    def __init__(self, ftype, fd=None, path=None)
+    super(WrongFileType, self).__init__(fd)
+    self.ftype = ftype
+    self.fd = None if fd is None else int(fd)
+    self.path = None if path is None else str(path)
+
+
 def read_check(func):
     """Decorator to control read permission in reader methods"""
     def _read(fd, *args, **kargs):
@@ -233,6 +242,8 @@ class File(FD):
 
     def __init__(self, fd):
         super(self.__class__, self).__init__(fd)
+        if not stat.S_ISREG(self.mode):
+            raise WrongFileType(File, fd=self.fd)
         self.pos = 0
 
     def __len__(self):
@@ -365,6 +376,10 @@ class File(FD):
                 wlen += _wlen
                 _tries = tries
 
+    def setbit(self, n, bit):
+        byte, offset = divmod(n, 8)
+        self[byte] = self[byte] | (1 << offset)
+
     @write_check
     def truncate(self, length=0):
         """Truncate the file and if the pointer is in a inexistent part of file
@@ -375,8 +390,7 @@ class File(FD):
             raise ValueError("negative length: %r" % length)
         size = self.size
         unistd.ftruncate(fd, length)
-        if size > length:
-            self.moveto(length)
+        self.moveto(length)
 
     def moveto(self, pos):
         """Move position pointer in position *pos* from start of FD."""
@@ -467,6 +481,8 @@ class Directory(FD):
 
     def __init__(self, fd, origin=None):
         super(self.__class__, self).__init__(fd)
+        if not stat.S_ISDIR(self.mode):
+            raise WrongFileType(Directory, fd=self.fd)
         self.origin = os.path.abspath(origin)
 
     @staticmethod
@@ -489,7 +505,7 @@ class Directory(FD):
             raise
         return fd
 
-    def openat(self, fpath, oflags, mode=0644):
+    def fileat(self, fpath, oflags, mode=0644):
         """Open a file descript for a regular file in fpath using the open mode
         specifie by *oflag* with *mode*"""
         _oflags = FOFLAGS2OFLAGS.get(int(oflags), None)
@@ -506,6 +522,17 @@ class Directory(FD):
             if oflags in _FO_NEW_FLAGS and not fcheck.ino_check(int(fd)):
                 raise OSError("not enough free inodes")
             fd = File(fd)
+        except:
+            if fd > -1:
+                unistd.close(fd)
+            raise
+        return fd
+
+    def dirat(self, fpath, create=0):
+        fd = -1
+        try:
+            fd = fcntl.openat(int(self), fpath, fcntl.O_RDONLY|fcntl.O_DIRECTORY, mode)
+            fd = Directory(fd)
         except:
             if fd > -1:
                 unistd.close(fd)
