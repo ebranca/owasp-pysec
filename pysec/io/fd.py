@@ -20,10 +20,13 @@
 """Contains FD and FD-like classes for operations with file descriptors"""
 import os
 
-from pysec.core import Error, Object, unistd, dirent, fcntl, stat
+from pysec.core import Error, Object, unistd, dirent, fcntl
+from pysec.core import stat as pstat
 from pysec.io import fcheck
 from pysec.utils import xrange
 from pysec import check
+
+import stat
 
 
 class FDError(Error):
@@ -55,11 +58,11 @@ class IncompleteWrite(FDError):
 
 class WrongFileType(FDError):
 
-    def __init__(self, ftype, fd=None, path=None)
-    super(WrongFileType, self).__init__(fd)
-    self.ftype = ftype
-    self.fd = None if fd is None else int(fd)
-    self.path = None if path is None else str(path)
+    def __init__(self, ftype, fd=None, path=None):
+        super(WrongFileType, self).__init__(fd)
+        self.ftype = ftype
+        self.fd = None if fd is None else int(fd)
+        self.path = None if path is None else str(path)
 
 
 def read_check(func):
@@ -495,7 +498,7 @@ class Directory(FD):
         path = os.path.abspath(path)
         try:
             if create:
-                fd = stat.mkdir(path, mode)
+                fd = pstat.mkdir(path, mode)
             else:
                 fd = dirent.opendir(path)
             fd = Directory(fd, path)
