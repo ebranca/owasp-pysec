@@ -31,6 +31,9 @@ from pysec import utils
 
 REMOVE_BUILTINS = 'eval', 'execfile'
 
+Object = core.Object
+Error = core.Error
+
 
 def set_builtins():
     _OPEN_MODES = {
