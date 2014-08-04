@@ -23,9 +23,10 @@ from pysec.xsplit import xbounds
 from pysec.alg import knp_first
 from pysec.io import fcheck
 from pysec.utils import xrange
-import os
+from pysec.sys.process import ProcessUtil
+import os,sys,resource,errno
 import fcntl
-
+import stat
 
 
 class FDError(Error):
@@ -54,6 +55,18 @@ class IncompleteWrite(FDError):
         super(IncompleteWrite, self).__init__(fd)
         self.size = int(size)
 
+class FailedDupFD(FDError):
+    """Raise when failed to dup an file descriptor"""
+    def __init__(self, fd, seq = None, detail = None):
+        super(FailedDupFD, self).__init__(fd)
+        self.seq = seq
+        self.detail = detail
+        
+    def __str__(self):
+        return "Failed to dup file descriptor %d" % (self.fd) + \
+               "to %d" % (self.seq) if self.seq is not None else "" + \
+               (", " + self.detail) if self.detail is not None else ""
+                                                                           
 
 def read_check(func):
     """Decorator to control read permission in reader methods"""
@@ -74,15 +87,21 @@ def write_check(func):
         raise NotWriteableFD(fd)
     return _write
 
-
 class FD(Object):
     """FD represents a File Descriptor"""
 
-    def __init__(self, fd):
+    def __init__(self, fd, inheritable=False):
+        """Wrapper a file descriptor
+        
+        :param fd: the file descriptor
+        :param inheritable: the file descriptor will be not inheritable `See PEP 446 <http://legacy.python.org/dev/peps/pep-0446/>`_ by default, or non-inheritable if inheritable is True
+        :type inheritable: bool
+        """
         fd = int(fd)
         if fd < 0:
-            raise ValueError("wrong fd value")
+            raise ValueError("Invalid fd value")
         self.fd = fd
+        self._set_inheritable(inheritable)
 
     def fileno(self):
         """Return file descriptor's int"""
@@ -99,10 +118,104 @@ class FD(Object):
         self.close()
         return 0
 
+    def __eq__(self, other):
+        if type(other).__name__ != type(self).__name__:
+            return False
+        if self.fileno() == other.fileno():
+            return True
+        return False
+
+    def __ne__(self, other):
+        if type(other).__name__ != type(self).__name__:
+            return False
+        if self.fileno() != other.fileno():
+            return True
+        return False
+
+    def __gt__(self, other):
+        if type(other).__name__ != type(self).__name__:
+            return False
+        if self.fileno() > other.fileno():
+            return True
+        return False
+
+    def __ge__(self, other):
+        if type(other).__name__ != type(self).__name__:
+            return False
+        if self.fileno() >= other.fileno():
+            return True
+        return False
+
+    def __lt__(self, other):
+        if type(other).__name__ != type(self).__name__:
+            return False
+        if self.fileno() < other.fileno():
+            return True
+        return False
+
+    def __le__(self, other):
+        if type(other).__name__ != type(self).__name__:
+            return False
+        if self.fileno() <= other.fileno():
+            return True
+        return False
+
     def close(self):
         """Closes file descriptor"""
         unistd.close(self.fd)
 
+    # factory function
+    @staticmethod
+    def FD(fd, **kwargs):
+        """A factory of file descriptor wrapper
+        This function will detect the type of file descriptor incoming and return the wrapped instance."""
+        if fd < 0:
+            raise ValueError("wrong fd value")
+        fs = os.fstat(fd)
+        st_mode = fs.st_mode
+        if stat.S_ISREG(st_mode):
+            return File(fd, **kwargs)
+        elif stat.S_ISBLK(st_mode):
+            return BlockDev(fd, **kwargs)
+        elif stat.S_ISDIR(st_mode):
+            return Directory(fd, **kwargs)
+        elif stat.S_ISCHR(st_mode):
+            return CharDev(fd, **kwargs)
+        elif stat.S_ISFIFO(st_mode):
+            return FIFO(fd, **kwargs)
+        elif stat.S_ISLNK(st_mode):
+            return SYMLNK(fd, **kwargs)
+        elif stat.S_ISSOCK(st_mode):
+            return Socket(fd, **kwargs)
+        else:
+            return FD(fd, **kwargs)
+
+    # some private function
+    def _set_inheritable(self, inheritable):
+        """Set "inheritable" flag
+        
+        :param inheritable: the file descriptor will be set to a non-inheritable file descriptors if inheritable is False
+        :type inheritable: bool
+        """
+        if sys.hexversion < 0x03040000:
+            unistd.set_inheritable(self.fd, inheritable)
+            #if inheritable is False:
+            #    self.on_flags(fcntl.FD_CLOEXEC)
+            #else:
+            #    self.off_flags(fcntl.FD_CLOEXEC)
+        else:
+            os.set_inheritable(self.fd, inheritable)
+    
+    def _get_inheritable(self):
+        """Get inheritable flag
+        
+        :returns: bool"""
+        if sys.hexversion < 0x03040000:
+            #return not self.has_flag(fcntl.FD_CLOEXEC)
+            return unistd.get_inheritable(self.fd)
+        else:
+            return os.get_inheritable(self.fd)
+    
     # stat methods
     def stat(self):
         """Returns result of a stat call"""
@@ -162,17 +275,64 @@ class FD(Object):
         details)."""
         return os.fstat(self.fd).st_ctime
 
-    # fcntl methods
+    # Get fd's link
+    def fd_link(self):
+        """Get the file descriptor's link in /proc/self/fd/<fd>"""
+        proc = '/proc/self/fd'
+        return os.readlink(os.path.join(proc, str(self.fd)))
+
+    # fcntl flags operator methods
     @property
     def flags(self):
         """Get file descriptor's flags (fcntl.F_GETFL)"""
-        return int(fcntl.fcntl(self.fd, fcntl.F_GETFL))
+        return fcntl.fcntl(self.fd, fcntl.F_GETFL, "0")
 
     @flags.setter
     def flags(self, flags):
         """Set file descriptor's flags (fcntl.F_SETFL)"""
-        fcntl.fcntl(self.fd, fcntl.F_SETFL, int(flags))
+        fcntl.fcntl(self.fd, fcntl.F_SETFL, flags)
+    
+    # About resource limit
+    @staticmethod
+    def get_maximum_value():
+        """Get the maximum number of open file descriptors for this process.
 
+        Return the process hard resource limit of maximum number of
+        open file descriptors. If the limit is “infinity”, None will be returned
+        """
+
+        limits = resource.getrlimit(resource.RLIMIT_NOFILE)
+        result = limits[1]
+        if result == resource.RLIM_INFINITY:
+            result = None
+        return result
+
+
+    #dup
+    def dup(self, inheritable = False, seq = None):
+        """
+        Dup the file descriptor. The new descriptor is non-inheritable in default
+        
+        If the seq has set, the new file descriptor will shall be the lowest numbered available (that is, not already open) file descriptor 
+        greater than or equal to the seq argument.
+        
+        :param inheritable: The inheritable setting
+        :param seq: Assign to the value of file descriptor.
+        :returns:  FD -- the new file descriptor will be wrapped by FD class.
+        :raises: FailedDupFD"""
+        newfd = -1
+        if seq is not None:
+            iseq = int(seq)
+            if not hasattr(fcntl, "F_DUPFD"):
+                FailedDupFD(self.fd, seq, "Current platform not support F_DUPFD")
+            newfd = fcntl.fcntl(self.fd, fcntl.F_DUPFD, iseq)
+        else:
+            newfd = os.dup(self.fd)
+
+        if newfd == -1:
+            raise FailedDupFD(self.fd, seq)
+
+        return FD.FD(newfd, inheritable=inheritable)
 
 ### Open modes for regular files
 # create a new file and raise error if it exists, use read mode
@@ -282,8 +442,8 @@ _FOMODE2FUNC = _fo_readnew, _fo_readex, _fo_wrnew, _fo_wrex, _fo_wrextr, \
 class File(FD):
     """File represents a Regular File's file descriptor."""
 
-    def __init__(self, fd):
-        super(self.__class__, self).__init__(fd)
+    def __init__(self, fd, **kwagrs):
+        super(self.__class__, self).__init__(fd, **kwagrs)
         self.pos = 0
 
     def __len__(self):
@@ -301,6 +461,10 @@ class File(FD):
                 return ''.join(self.pread(1, pos) for pos
                                in xrange(start, stop, step))
         raise IndexError('wrong index type: %s' % type(index))
+
+    @property
+    def filepath(self):
+        return self.fd_link()
 
     @staticmethod
     def open(fpath, oflag, mode=0666):
@@ -511,8 +675,8 @@ class File(FD):
 class Directory(FD):
     """Directory represents a Directory's file descriptor."""
 
-    def __init__(self, fd, origin=None):
-        super(self.__class__, self).__init__(fd)
+    def __init__(self, fd, origin=None, **kwagrs):
+        super(self.__class__, self).__init__(fd, **kwagrs)
         self.origin = os.path.abspath(origin)
         # self.pos = 0
 
@@ -575,3 +739,64 @@ class CharDev(FD):
 class FIFO(FD):
     """File represents a FIFO's file descriptor."""
     pass
+
+class SYMLNK(FD):
+    """File represents a symbolic link"""
+    pass
+
+class FDUtils():
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def list_fds(pid = None):
+        """This function will return an iterator with all file descriptors in current process or special process
+
+        :param pid: the special process id, default is None
+        :raises: AttributeError, KeyError
+        :return: FD derivative class , path link tuple via iterator.
+        :rtype: iterator
+        """
+        if not sys.platform.startswith('linux'):
+            raise NotImplementedError('Unsupported platform: %s' % sys.platform)
+
+        procBase = None
+        if pid is not None:
+            allPIDs = ProcessUtil.get_pid_list()
+            if pid in allPIDs:
+                procBase = os.path.join("proc", str(pid), "fd")
+            else:
+                raise ValueError("Invalid fd value")
+        else:
+            procBase = '/proc/self/fd'
+
+        for num in os.listdir(procBase):
+            path = None
+            try:
+                path = os.readlink(os.path.join(procBase, num))
+            except OSError as err:
+                # Last FD is always the "listdir" one (which may be closed), we shoul ignore it.
+                if err.errno != errno.ENOENT:
+                    raise
+            if path is not None:
+                yield (FD.FD(int(num)), path)
+
+    @staticmethod
+    def close_all_open_fds(exclude = None):
+        """Close all open file descriptors but not in exclude in current process
+        """
+        for fd, path in FDUtils.list_fds():
+            if exclude is not None and fd.fileno() in exclude:
+                continue
+            fd.close()
+
+    @staticmethod
+    def clear_all_open_fds(exclude = None):
+        """Close all open file descriptors in current process by violence way
+
+        This function will try to close file descriptors from 0 to maximum value in current process whatever available or not
+        """
+        maxfd = FD.get_maximum_value()
+        for fd in reversed(range(maxfd)):
+            if exclude is None or fd not in exclude:
+                unistd.close(fd)
