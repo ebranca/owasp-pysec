@@ -292,8 +292,7 @@ class FD(Object):
     def get_maximum_value():
         """Get the maximum number of open file descriptors for this process.
 
-        Return the process hard resource limit of maximum number of
-        open file descriptors. If the limit is “infinity”, None will be returned
+        Return the process hard resource limit of maximum number of open file descriptors. If the limit is "infinity", None will be returned
         """
 
         limits = resource.getrlimit(resource.RLIMIT_NOFILE)
@@ -739,7 +738,7 @@ class SYMLNK(FD):
     """File represents a symbolic link"""
     pass
 
-class FDUtils():
+class FDUtils(Object):
     def __init__(self):
         pass
 
@@ -757,8 +756,7 @@ class FDUtils():
 
         procBase = None
         if pid is not None:
-            allPIDs = ProcessUtil.get_pid_list()
-            if pid in allPIDs:
+            if ProcessUtil.is_alive(pid):
                 procBase = os.path.join("proc", str(pid), "fd")
             else:
                 raise ValueError("Invalid pid or the specific process has terminated.")

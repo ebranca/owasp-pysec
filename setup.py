@@ -23,6 +23,7 @@ from distutils.core import setup, Extension
 packages = [
     'pysec',
     'pysec.core',
+    'pysec.sys',
     'pysec.io',
     'pysec.kv',
     'pysec.lang',

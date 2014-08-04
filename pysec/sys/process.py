@@ -27,7 +27,7 @@
 .. moduleauthor:: Federico Figus <figus.federico@gmail.com>, Jone Casper <xu.chenhui@live.com>
 
 """
-from pysec.core import Error
+from pysec.core import Error, Object
 import sys, glob
 
 psutil_has_import = False
@@ -44,7 +44,7 @@ class ProcessError(Error):
         self.pid = int(pid) 
         
 
-class ProcessUtil:
+class ProcessUtil(Object):
     def __init__(self):
         pass
 
@@ -86,11 +86,12 @@ class ProcessUtil:
             return [int(pid) for pid, cmdline in ProcessUtil.list_pid()]
         
     @staticmethod
-    def is_running_process(pid):
+    def is_alive(pid):
         """Check whether the process owned the pid is running"""
         pid = int(pid)
         if pid < 0:
             raise ValueError("Invalid pid value")
+        return pid in ProcessUtil.get_pid_list()
 
 
 if __name__ == "__main__":
