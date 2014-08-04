@@ -21,10 +21,24 @@ class TestFD(unittest.TestCase):
         self.assertFalse(inheritable)
 
     def test_dup(self):
-        newFD = self.testFileFD.dup()
-        self.assertIsNotNone(newFD)
-        self.assertNotEqual(newFD.fd, self.testFileFD.fd)
-        self.assertEqual(newFD.filepath, self.testFileFD.filepath)
+        dupFD = self.testFileFD.dup()
+        self.assertIsNotNone(dupFD)
+        self.assertNotEqual(dupFD.fd, self.testFileFD.fd)
+        self.assertEqual(dupFD.filepath, self.testFileFD.filepath)
+        dupFD.close()
+
+    def test_compare(self):
+        sameFD = FD.FD(self.testFileFD.fd)
+        self.assertTrue(sameFD == self.testFileFD)
+
+        dupFD = self.testFileFD.dup(seq=256)
+        self.assertTrue(dupFD > self.testFileFD)
+        self.assertTrue(dupFD >= self.testFileFD)
+        self.assertTrue(sameFD >= self.testFileFD)
+        self.assertTrue(self.testFileFD < dupFD)
+        self.assertTrue(self.testFileFD <= sameFD)
+        self.assertTrue(self.testFileFD <= dupFD)
+        dupFD.close()
     
     def tearDown(self):
         self.testFileFD.close()

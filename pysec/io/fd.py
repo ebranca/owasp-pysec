@@ -127,35 +127,35 @@ class FD(Object):
 
     def __ne__(self, other):
         if type(other).__name__ != type(self).__name__:
-            return False
+            return True
         if self.fileno() != other.fileno():
             return True
         return False
 
     def __gt__(self, other):
         if type(other).__name__ != type(self).__name__:
-            return False
+            return TypeError("can't compare %s to %s" % (type(other).__name__, type(self).__name__))
         if self.fileno() > other.fileno():
             return True
         return False
 
     def __ge__(self, other):
         if type(other).__name__ != type(self).__name__:
-            return False
+            return TypeError("can't compare %s to %s" % (type(other).__name__, type(self).__name__))
         if self.fileno() >= other.fileno():
             return True
         return False
 
     def __lt__(self, other):
         if type(other).__name__ != type(self).__name__:
-            return False
+            return TypeError("can't compare %s to %s" % (type(other).__name__, type(self).__name__))
         if self.fileno() < other.fileno():
             return True
         return False
 
     def __le__(self, other):
         if type(other).__name__ != type(self).__name__:
-            return False
+            return TypeError("can't compare %s to %s" % (type(other).__name__, type(self).__name__))
         if self.fileno() <= other.fileno():
             return True
         return False
@@ -199,10 +199,6 @@ class FD(Object):
         """
         if sys.hexversion < 0x03040000:
             unistd.set_inheritable(self.fd, inheritable)
-            #if inheritable is False:
-            #    self.on_flags(fcntl.FD_CLOEXEC)
-            #else:
-            #    self.off_flags(fcntl.FD_CLOEXEC)
         else:
             os.set_inheritable(self.fd, inheritable)
     
@@ -211,7 +207,6 @@ class FD(Object):
         
         :returns: bool"""
         if sys.hexversion < 0x03040000:
-            #return not self.has_flag(fcntl.FD_CLOEXEC)
             return unistd.get_inheritable(self.fd)
         else:
             return os.get_inheritable(self.fd)
@@ -766,7 +761,7 @@ class FDUtils():
             if pid in allPIDs:
                 procBase = os.path.join("proc", str(pid), "fd")
             else:
-                raise ValueError("Invalid fd value")
+                raise ValueError("Invalid pid or the specific process has terminated.")
         else:
             procBase = '/proc/self/fd'
 
