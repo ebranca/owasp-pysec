@@ -37,25 +37,24 @@ try:
 except ImportError:
     psutil_has_import = False
 
+is_mswindows = (sys.platform == "win32")
+
 class ProcessError(Error):
-    """Generic process moulde's errorfor"""
+    """Generic process moulde's error"""
     def __init__(self, pid):
         super(ProcessError, self).__init__()
         self.pid = int(pid) 
         
 
-class ProcessUtil(Object):
-    def __init__(self):
-        pass
-
+class Process(Object):
     @staticmethod
-    def list_pid():
+    def list_processes():
         """This function will return an iterator with the process pid/cmdline tuple
 
         :return: pid, cmdline tuple via iterator
         :rtype: iterator
 
-        >>> for procs in list_processes():
+        >>> for procs in Process.list_processes():
         >>>     print procs
         ('5593', '/usr/lib/mozilla/kmozillahelper')
         ('6353', 'pickup -l -t fifo -u')
@@ -81,9 +80,9 @@ class ProcessUtil(Object):
         if psutil_has_import:
             return psutil.get_pid_list()
         else:
-            if not sys.platform.startswith('linux'):
+            if is_mswindows:
                 raise NotImplementedError('Unsupported platform: %s' % sys.platform)
-            return [int(pid) for pid, cmdline in ProcessUtil.list_pid()]
+            return [int(pid) for pid, cmdline in Process.list_processes()]
         
     @staticmethod
     def is_alive(pid):
@@ -91,10 +90,10 @@ class ProcessUtil(Object):
         pid = int(pid)
         if pid < 0:
             raise ValueError("Invalid pid value")
-        return pid in ProcessUtil.get_pid_list()
+        return pid in Process.get_pid_list()
 
 
 if __name__ == "__main__":
     #some test
-    pids = ProcessUtil.get_pid_list()
+    pids = Process.get_pid_list()
     print(pids)

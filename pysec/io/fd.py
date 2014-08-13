@@ -23,11 +23,12 @@ from pysec.xsplit import xbounds
 from pysec.alg import knp_first
 from pysec.io import fcheck
 from pysec.utils import xrange
-from pysec.sys.process import ProcessUtil
+from pysec.sys.process import Process
 import os,sys,resource,errno
 import fcntl
 import stat
 
+is_mswindows = (sys.platform == "win32")
 
 class FDError(Error):
     """Generic error for fd module"""
@@ -751,12 +752,12 @@ class FDUtils(Object):
         :return: FD derivative class , path link tuple via iterator.
         :rtype: iterator
         """
-        if not sys.platform.startswith('linux'):
+        if is_mswindows:
             raise NotImplementedError('Unsupported platform: %s' % sys.platform)
 
         procBase = None
         if pid is not None:
-            if ProcessUtil.is_alive(pid):
+            if Process.is_alive(pid):
                 procBase = os.path.join("proc", str(pid), "fd")
             else:
                 raise ValueError("Invalid pid or the specific process has terminated.")
