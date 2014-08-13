@@ -3,7 +3,7 @@
 
 import unittest
 import multiprocessing, time
-from pysec.sys.process import ProcessUtil
+from pysec.sys.process import Process
 
 class TestProcessUtil(unittest.TestCase):
     def setUp(self):
@@ -11,10 +11,10 @@ class TestProcessUtil(unittest.TestCase):
         self.proc.start()
 
     def test_get_pid_list(self):
-        self.assertTrue(self.proc.pid in ProcessUtil.get_pid_list())
+        self.assertTrue(self.proc.pid in Process.get_pid_list())
 
     def test_is_alive(self):
-        self.assertTrue(ProcessUtil.is_alive(self.proc.pid))
+        self.assertTrue(Process.is_alive(self.proc.pid))
         
     def tearDown(self):
         self.proc.terminate()
