@@ -22,13 +22,13 @@
 .. module:: pysec.sys.popen
    :platform: Unix
    :synopsis: The popen module support a safety Popen function based on subprocess.Popen .
-   We will force to set some setting for make a safety environment before executing exec*, such as:
-   - set uid, gid (Force to change the process's user to which set in the /etc/pysec/pysec.conf if has not been specified)
-   - change working directory (optional)
-   - close all file descriptors except 0, 1 and 2 and specified in pass_fds
-   - All signals restored to SIG_DFL not just Pythom set (restore_signals was added after Python 3.2 but just restored SIGPIPE, SIGXFZ and SIGXFSZ signals)
-   - Prevent core dump
-   - Limit fork , default prevent fork completely
+   We will force to set some setting for making a safety environment before executing exec*, such as:
+   - Set uid, gid (Force to change the process's owner and owner group to which set in the /etc/pysec/pysec.conf if not specified).
+   - Change working directory (optional).
+   - Close all file descriptors except 0, 1 and 2.
+   - All signals restored to default function (restore_signals was added after Python 3.2 but just restored SIGPIPE, SIGXFZ and SIGXFSZ signals).
+   - Prevent core dump.
+   - Limit fork , default prohibit forking process completely.
 
 .. moduleauthor:: Federico Figus <figus.federico@gmail.com>, Jone Casper <xu.chenhui@live.com>
 
@@ -53,6 +53,21 @@ class PopenSystemError(Error, OSError):
     """ Exception raised when the environment setup receives error. """
 
 class Popen(_popen):
+    """
+    Execute a child program in a new process. We only list which the characteristic parameters, others please see the python's document.
+
+    :param args: args should be a sequence of program arguments or else a single string.
+    :param close_fds: By default, we will close all file descriptors except 0, 1 and 2.
+    :param restore_signals: By default, all signals restored to default function.
+    :param start_new_session: the setsid() system call will be made in the child process
+    :param uid: change the process's owner
+    :param gid: change the process's owner group
+    :param working_directory: change_working directory, same as the cwd parameter
+    :param root_directory: change_root directory by invoking chroot()
+    :param prevent_coredump: By default, the chile process ban makeing the core dump file only if the setting is False
+    :param limit_fork: By default, prohibit forking process completely in child process
+    :param conf: The config file which defined the defualt owner and owner group.The defualt location is /etc/pysec/pysec.conf.
+    """
     def __init__(self, args, 
                  uid = None, 
                  gid = None,
@@ -84,8 +99,8 @@ class Popen(_popen):
             if self.uid == 0 or (self.uid is None and os.getuid() == 0):
                 warnings.warn('We strongly recommend not to run script using root privilege even though you trust it.', RuntimeWarning)
 
-            self.working_directory = working_directory
-            self.root_directory = root_directory or kwargs.get('cwd')
+            self.working_directory = working_directory or kwargs.get('cwd')
+            self.root_directory = root_directory
             self._preexec_fn = kwargs.get('preexec_fn')
 
             #pass signals
@@ -116,6 +131,7 @@ class Popen(_popen):
             #We will call chdir at the end of the preexec_fn to make sure some function can work on normally.
             kwargs['cwd'] = None
 
+            self.old_preexec_fn = kwargs.get('preexec_fn')
             kwargs['preexec_fn'] = self.preexec_fn
         else:
             kwargs['close_fds'] = True
@@ -241,6 +257,9 @@ class Popen(_popen):
                 rs.limit_fork(limit = self.limit_fork)
         except Exception, exc:
             warnings.warn("Set the resource limit failed, maybe we had some privilege's problems. (%(exc)s)")
+
+        if self.old_preexec_fn:
+            self.old_preexec_fn()
 
 if __name__ == "__main__":
     from subprocess import PIPE
