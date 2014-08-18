@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <limits.h>
 
-
 /* from posix_module */
 /* Issue #1983: pid_t can be longer than a C long on some systems */
 #if !defined(SIZEOF_PID_T) || SIZEOF_PID_T == SIZEOF_INT
@@ -1239,7 +1238,6 @@ static PyMethodDef unistd_methods[] = {
     {"vfork", (PyCFunction)unistd_vfork, METH_KEYWORDS, unistd_vfork__doc__},
     {"write", (PyCFunction)unistd_write, METH_KEYWORDS, unistd_write__doc__},
     {"write", (PyCFunction)unistd_write, METH_KEYWORDS, unistd_write__doc__},
-
     {NULL}
 };
 

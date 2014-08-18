@@ -20,9 +20,23 @@
 # -*- coding: ascii -*-
 from distutils.core import setup, Extension
 
+import os,sys
+from distutils.command.install import install as _install
+
+def _setup_env(dir):
+    from subprocess import call
+    call(['scripts/setupenv.sh'])
+
+class install(_install):
+    def run(self):
+        _install.run(self)
+        self.execute(_setup_env, (self.install_lib,),
+                     msg="Setup pysec environment...")
+
 packages = [
     'pysec',
     'pysec.core',
+    'pysec.sys',
     'pysec.io',
     'pysec.kv',
     'pysec.lang',
@@ -40,7 +54,8 @@ classifiers = [
 exts = [
     Extension('pysec.core.unistd', ['pysec/core/unistd.c'], libraries=['crypt']),
     Extension('pysec.core.memory', ['pysec/core/memory.c']),
-    Extension('pysec.core.dirent', ['pysec/core/dirent.c'])
+    Extension('pysec.core.dirent', ['pysec/core/dirent.c']),
+    Extension('pysec.core.fd', ['pysec/core/fd.c'])
 ]
 
 setup(name='pysec',
@@ -55,7 +70,6 @@ setup(name='pysec',
      )
 
 version = '0.0.1a0'
-
 setup(name='pysec',
       version=version,
       description="PySec is a set of tools for secure application development under Linux",
@@ -78,4 +92,8 @@ setup(name='pysec',
       include_package_data=True,
       zip_safe=False,
       install_requires=['distutils'],
+      cmdclass={'install': install},
+      data_files=[
+          ('/etc/pysec', ['conf/pysec.conf'] )
+      ]
 )
