@@ -27,7 +27,7 @@
 .. moduleauthor:: Federico Figus <figus.federico@gmail.com>, Jone Casper <xu.chenhui@live.com>
 
 """
-from pysec.core import Error, Object
+from pysec.core import Error
 import sys, glob
 
 psutil_has_import = False
@@ -45,55 +45,50 @@ class ProcessError(Error):
         super(ProcessError, self).__init__()
         self.pid = int(pid) 
         
+def list_processes():
+    """This function will return an iterator with the process pid/cmdline tuple
 
-class Process(Object):
-    @staticmethod
-    def list_processes():
-        """This function will return an iterator with the process pid/cmdline tuple
+    :return: pid, cmdline tuple via iterator
+    :rtype: iterator
 
-        :return: pid, cmdline tuple via iterator
-        :rtype: iterator
+    >>> for procs in Process.list_processes():
+    >>>     print procs
+    ('5593', '/usr/lib/mozilla/kmozillahelper')
+    ('6353', 'pickup -l -t fifo -u')
+    ('6640', 'kdeinit4: konsole [kdeinit]')
+    ('6643', '/bin/bash')
+    ('7451', '/usr/bin/python /usr/bin/ipython')
+    """
+    for pid_path in glob.glob('/proc/[0-9]*/'):
+        pid = pid_path.split("/")[2] # get the PID
+        # cmdline represents the command whith which the process was started
+        try:
+            with open("%s/cmdline" % pid_path) as fd:
+                # we replace the \x00 to spaces to make a prettier output from kernel
+                cmdline = fd.read().replace("\x00", " ").rstrip()
+                yield (pid, cmdline)
+        except IOError:
+            # proc has already terminated
+            continue
+    
+def get_pids_list():
+    """Get running process list"""
+    if psutil_has_import:
+        return psutil.get_pid_list()
+    else:
+        if is_mswindows:
+            raise NotImplementedError('Unsupported platform: %s' % sys.platform)
+        return [int(pid) for pid, cmdline in list_processes()]
 
-        >>> for procs in Process.list_processes():
-        >>>     print procs
-        ('5593', '/usr/lib/mozilla/kmozillahelper')
-        ('6353', 'pickup -l -t fifo -u')
-        ('6640', 'kdeinit4: konsole [kdeinit]')
-        ('6643', '/bin/bash')
-        ('7451', '/usr/bin/python /usr/bin/ipython')
-        """
-        for pid_path in glob.glob('/proc/[0-9]*/'):
-            pid = pid_path.split("/")[2] # get the PID
-            # cmdline represents the command whith which the process was started
-            try:
-                with open("%s/cmdline" % pid_path) as fd:
-                    # we replace the \x00 to spaces to make a prettier output from kernel
-                    cmdline = fd.read().replace("\x00", " ").rstrip()
-                    yield (pid, cmdline)
-            except IOError:
-                # proc has already terminated
-                continue
-
-    @staticmethod
-    def get_pid_list():
-        """Get running process list"""
-        if psutil_has_import:
-            return psutil.get_pid_list()
-        else:
-            if is_mswindows:
-                raise NotImplementedError('Unsupported platform: %s' % sys.platform)
-            return [int(pid) for pid, cmdline in Process.list_processes()]
-        
-    @staticmethod
-    def is_alive(pid):
-        """Check whether the process owned the pid is running"""
-        pid = int(pid)
-        if pid < 0:
-            raise ValueError("Invalid pid value")
-        return pid in Process.get_pid_list()
+def process_is_alive(pid):
+    """Check whether the process owned the pid is running"""
+    pid = int(pid)
+    if pid < 0:
+        raise ValueError("Invalid pid value")
+    return pid in get_pids_list()
 
 
 if __name__ == "__main__":
     #some test
-    pids = Process.get_pid_list()
+    pids = get_pids_list()
     print(pids)

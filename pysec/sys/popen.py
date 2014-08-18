@@ -34,8 +34,7 @@
 
 """
 from pysec.core import Error, Object
-from pysec.io.fd import FDUtils
-from pysec.sys.psignal import PSignal
+from pysec.sys.psignal import default_all_signals
 from pysec.sys.utils import Resource
 from subprocess import Popen as _popen
 import os.path, sys, warnings
@@ -236,7 +235,7 @@ class Popen(_popen):
  
         #set all signals to default
         if self.restore_signals:
-            PSignal.default_all_signals(excepts=list(self.pass_signals))
+            default_all_signals(excepts=list(self.pass_signals))
         
         #set working and root directory
         if self.working_directory is not None:

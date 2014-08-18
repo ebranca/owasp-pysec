@@ -3,7 +3,7 @@
 
 import unittest
 import signal,os
-from pysec.sys.psignal import PSignal
+from pysec.sys.psignal import list_singals, default_all_signals
 
 class TestSignalUtil(unittest.TestCase):
     def setUp(self):
@@ -14,11 +14,11 @@ class TestSignalUtil(unittest.TestCase):
         signal.signal(signal.SIGUSR1, handler)
 
     def test_list_signals(self):
-        all_signals = dict([(num, name) for num, name in PSignal.list_singals()])
+        all_signals = dict([(num, name) for num, name in list_singals()])
         self.assertTrue(signal.SIGKILL in all_signals)
 
     def test_setDefault(self):
-        PSignal.default_all_signals()
+        default_all_signals()
 
         os.kill(os.getpid(), signal.SIGUSR1)
         self.assertEqual(self.count, 0)

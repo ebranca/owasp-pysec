@@ -1,16 +1,16 @@
 #!/usr/bin/python -OOBtt
 """The Unittest for io.fd"""
 
-import random
 import unittest
 import tempfile
-import os,fcntl
-from pysec.io.fd import FD, File, FDUtils
+import os
+import fcntl
+from pysec.io.fd import FD, File, process_opened_fds
 
 class TestFD(unittest.TestCase):
     def setUp(self):
         tf = tempfile.mkstemp()
-        self.testFileFD = FD.FD(tf[0])
+        self.testFileFD = FD.create(tf[0])
         self.testFileFDPath = tf[1]
 
     def test_getpath(self):
@@ -28,7 +28,7 @@ class TestFD(unittest.TestCase):
         dupFD.close()
 
     def test_compare(self):
-        sameFD = FD.FD(self.testFileFD.fd)
+        sameFD = FD.create(self.testFileFD.fd)
         self.assertTrue(sameFD == self.testFileFD)
 
         dupFD = self.testFileFD.dup(seq=256)
@@ -43,14 +43,14 @@ class TestFD(unittest.TestCase):
     def tearDown(self):
         self.testFileFD.close()
 
-class TestFDUtil(unittest.TestCase):
+class TestFDFunction(unittest.TestCase):
     def setUp(self):
         tf = tempfile.mkstemp()
-        self.testFileFD = FD.FD(tf[0])
+        self.testFileFD = FD.create(tf[0])
 
     def test_listfds(self):
         fdin = False
-        for fd, path in FDUtils.list_fds():
+        for fd, path in process_opened_fds():
             if fd == self.testFileFD:
                 fdin = True
         self.assertTrue(fdin)

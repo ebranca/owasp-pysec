@@ -26,30 +26,26 @@
 .. moduleauthor:: Federico Figus <figus.federico@gmail.com>, Jone Casper <xu.chenhui@live.com>
 """
 
-from pysec.core import Object
 import signal
 
-class PSignal(Object):
-    @staticmethod
-    def list_singals():
-        """This function will return an iterator with the number of value/signal name
+def list_singals():
+    """This function will return an iterator with the number of value/signal name
 
-        :return: number/name of signal
-        :rtype: iterator
-        """
-        for name, num in signal.__dict__.iteritems():
-            if name.startswith('SIG') and not name.startswith('SIG_'):
-                yield (num, name)
+    :return: number/name of signal
+    :rtype: iterator
+    """
+    for name, num in signal.__dict__.iteritems():
+        if name.startswith('SIG') and not name.startswith('SIG_'):
+            yield (num, name)
 
-    @staticmethod
-    def default_all_signals(excepts=[]):
-        """Set signal.SIG_DFL for all tranditional signal under signal.SIGRTMIN"""
-        #SIGKILL and SIGSTOP can not be caught or ignored
-        excepts = excepts + [signal.SIGKILL, signal.SIGSTOP]
-        for num, name in PSignal.list_singals():
-            if num not in excepts:
-                signal.signal(num, signal.SIG_DFL)
+def default_all_signals(excepts=[]):
+    """Set signal.SIG_DFL for all tranditional signal under signal.SIGRTMIN"""
+    #SIGKILL and SIGSTOP can not be caught or ignored
+    excepts = excepts + [signal.SIGKILL, signal.SIGSTOP]
+    for num, name in list_singals():
+        if num not in excepts:
+            signal.signal(num, signal.SIG_DFL)
 
 if __name__ == "__main__":
-    for num, name in PSignal.list_singals():
+    for num, name in list_singals():
         print name

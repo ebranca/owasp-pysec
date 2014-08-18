@@ -19,12 +19,16 @@
 # -*- coding: ascii -*-
 """Contains FD and FD-like classes for operations with file descriptors"""
 from pysec.core import Error, Object, unistd, dirent
+from pysec.core import fd as core_fd
 from pysec.xsplit import xbounds
 from pysec.alg import knp_first
 from pysec.io import fcheck
 from pysec.utils import xrange
-from pysec.sys.process import Process
-import os,sys,resource,errno
+from pysec.sys.process import process_is_alive
+import os
+import sys
+import resource
+import errno
 import fcntl
 import stat
 
@@ -91,17 +95,17 @@ def write_check(func):
 class FD(Object):
     """FD represents a File Descriptor"""
 
-    def __init__(self, fd, inheritable=False):
+    def __init__(self, fd, inheritable=0):
         """Wrapper a file descriptor
         
         :param fd: the file descriptor
-        :param inheritable: the file descriptor will be not inheritable `See PEP 446 <http://legacy.python.org/dev/peps/pep-0446/>`_ by default, or non-inheritable if inheritable is True
-        :type inheritable: bool
+        :param inheritable: the file descriptor will be not inheritable `See PEP 446 <http://legacy.python.org/dev/peps/pep-0446/>`_ by default, or inheritable if the parameter is 1
+        :type inheritable: int 
         """
-        fd = int(fd)
-        if fd < 0:
+        ifd = int(fd)
+        if ifd < 0:
             raise ValueError("Invalid fd value")
-        self.fd = fd
+        self.fd = ifd
         self._set_inheritable(inheritable)
 
     def fileno(self):
@@ -120,42 +124,42 @@ class FD(Object):
         return 0
 
     def __eq__(self, other):
-        if type(other).__name__ != type(self).__name__:
+        if type(self) is not type(other):
             return False
         if self.fileno() == other.fileno():
             return True
         return False
 
     def __ne__(self, other):
-        if type(other).__name__ != type(self).__name__:
+        if type(self) is not type(other):
             return True
         if self.fileno() != other.fileno():
             return True
         return False
 
     def __gt__(self, other):
-        if type(other).__name__ != type(self).__name__:
+        if type(self) is not type(other):
             return TypeError("can't compare %s to %s" % (type(other).__name__, type(self).__name__))
         if self.fileno() > other.fileno():
             return True
         return False
 
     def __ge__(self, other):
-        if type(other).__name__ != type(self).__name__:
+        if type(self) is not type(other):
             return TypeError("can't compare %s to %s" % (type(other).__name__, type(self).__name__))
         if self.fileno() >= other.fileno():
             return True
         return False
 
     def __lt__(self, other):
-        if type(other).__name__ != type(self).__name__:
+        if type(self) is not type(other):
             return TypeError("can't compare %s to %s" % (type(other).__name__, type(self).__name__))
         if self.fileno() < other.fileno():
             return True
         return False
 
     def __le__(self, other):
-        if type(other).__name__ != type(self).__name__:
+        if type(self) is not type(other):
             return TypeError("can't compare %s to %s" % (type(other).__name__, type(self).__name__))
         if self.fileno() <= other.fileno():
             return True
@@ -167,7 +171,7 @@ class FD(Object):
 
     # factory function
     @staticmethod
-    def FD(fd, **kwargs):
+    def create(fd, **kwargs):
         """A factory of file descriptor wrapper
         This function will detect the type of file descriptor incoming and return the wrapped instance."""
         if fd < 0:
@@ -195,22 +199,16 @@ class FD(Object):
     def _set_inheritable(self, inheritable):
         """Set "inheritable" flag
         
-        :param inheritable: the file descriptor will be set to a non-inheritable file descriptors if inheritable is False
-        :type inheritable: bool
+        :param inheritable: the file descriptor will be set to a non-inheritable file descriptors if inheritable is 0
+        :type inheritable: int
         """
-        if sys.hexversion < 0x03040000:
-            unistd.set_inheritable(self.fd, inheritable)
-        else:
-            os.set_inheritable(self.fd, inheritable)
+        core_fd.set_inheritable(self.fd, inheritable)
     
     def _get_inheritable(self):
         """Get inheritable flag
         
         :returns: bool"""
-        if sys.hexversion < 0x03040000:
-            return unistd.get_inheritable(self.fd)
-        else:
-            return os.get_inheritable(self.fd)
+        return core_fd.get_inheritable(self.fd)
     
     # stat methods
     def stat(self):
@@ -304,7 +302,7 @@ class FD(Object):
 
 
     #dup
-    def dup(self, inheritable = False, seq = None):
+    def dup(self, inheritable = 0, seq = None):
         """
         Dup the file descriptor. The new descriptor is non-inheritable in default
         
@@ -319,15 +317,18 @@ class FD(Object):
         if seq is not None:
             iseq = int(seq)
             if not hasattr(fcntl, "F_DUPFD"):
-                FailedDupFD(self.fd, seq, "Current platform not support F_DUPFD")
-            newfd = fcntl.fcntl(self.fd, fcntl.F_DUPFD, iseq)
+                raise FailedDupFD(self.fd, seq, "Current platform not support F_DUPFD")
+            #use unistd.dup2 to replace
+            #newfd = fcntl.fcntl(self.fd, fcntl.F_DUPFD, iseq)
+            newfd = unistd.dup2(self.fd, iseq)
         else:
-            newfd = os.dup(self.fd)
-
+            #use unistd.dup to replace
+            #newfd = os.dup(self.fd)
+            newfd = unistd.dup(self.fd)
         if newfd == -1:
             raise FailedDupFD(self.fd, seq)
 
-        return FD.FD(newfd, inheritable=inheritable)
+        return FD.create(newfd, inheritable=inheritable)
 
 ### Open modes for regular files
 # create a new file and raise error if it exists, use read mode
@@ -739,58 +740,58 @@ class SYMLNK(FD):
     """File represents a symbolic link"""
     pass
 
-class FDUtils(Object):
-    def __init__(self):
-        pass
+def process_opened_fds(pid = None):
+    """This function will return an iterator with all file descriptors in current process or special process
 
-    @staticmethod
-    def list_fds(pid = None):
-        """This function will return an iterator with all file descriptors in current process or special process
+    :param pid: the special process id, default is None
+    :raises: AttributeError, KeyError
+    :return: FD derivative class , path link tuple via iterator.
+    :rtype: iterator
+    """
+    if is_mswindows:
+        raise NotImplementedError('Unsupported platform: %s' % sys.platform)
 
-        :param pid: the special process id, default is None
-        :raises: AttributeError, KeyError
-        :return: FD derivative class , path link tuple via iterator.
-        :rtype: iterator
-        """
-        if is_mswindows:
-            raise NotImplementedError('Unsupported platform: %s' % sys.platform)
-
-        procBase = None
-        if pid is not None:
-            if Process.is_alive(pid):
-                procBase = os.path.join("proc", str(pid), "fd")
-            else:
-                raise ValueError("Invalid pid or the specific process has terminated.")
+    procBase = None
+    if pid is not None:
+        if process_is_alive(pid):
+            procBase = os.path.join("proc", str(pid), "fd")
         else:
-            procBase = '/proc/self/fd'
+            raise ValueError("Invalid pid or the specific process has terminated.")
+    else:
+        procBase = '/proc/self/fd'
 
-        for num in os.listdir(procBase):
-            path = None
-            try:
-                path = os.readlink(os.path.join(procBase, num))
-            except OSError as err:
-                # Last FD is always the "listdir" one (which may be closed), we shoul ignore it.
-                if err.errno != errno.ENOENT:
-                    raise
-            if path is not None:
-                yield (FD.FD(int(num)), path)
+    for num in os.listdir(procBase):
+        path = None
+        try:
+            path = os.readlink(os.path.join(procBase, num))
+        except OSError as err:
+            # Last FD is always the "listdir" one (which may be closed), we shoul ignore it.
+            if err.errno != errno.ENOENT:
+                raise
+        if path is not None:
+            yield (FD.create(int(num)), path)
 
-    @staticmethod
-    def close_all_open_fds(exclude = None):
-        """Close all open file descriptors but not in exclude in current process
-        """
-        for fd, path in FDUtils.list_fds():
-            if exclude is not None and fd.fileno() in exclude:
-                continue
-            fd.close()
+def close_all_opened_fds(exclude = None):
+    """Close all open file descriptors but not in exclude in current process
+    """
+    for fd, path in process_opened_fds():
+        if exclude is not None and fd.fileno() in exclude:
+            continue
+        fd.close()
 
-    @staticmethod
-    def clear_all_open_fds(exclude = None):
-        """Close all open file descriptors in current process by violence way
+def clear_all_opened_fds(exclude = None):
+    """Close all open file descriptors in current process by violence way
 
-        This function will try to close file descriptors from 0 to maximum value in current process whatever available or not
-        """
-        maxfd = FD.get_maximum_value()
-        for fd in reversed(range(maxfd)):
-            if exclude is None or fd not in exclude:
-                unistd.close(fd)
+    This function will try to close file descriptors from 0 to maximum value in current process whatever available or not
+    """
+    maxfd = FD.get_maximum_value()
+    for fd in xrange(0, maxfd):
+        if exclude is None or fd not in exclude:
+            unistd.close(fd)
+
+if __name__ == "__main__":
+    import tempfile
+    tf = tempfile.mkstemp()
+    for fd, path in process_opened_fds():
+        print fd, path
+    os.close(tf[0])

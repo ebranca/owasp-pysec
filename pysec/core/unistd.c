@@ -27,10 +27,6 @@
 #include <stdio.h>
 #include <limits.h>
 
-#ifdef HAVE_SYS_IOCTL_H
-#include <sys/ioctl.h>
-#endif
-
 /* from posix_module */
 /* Issue #1983: pid_t can be longer than a C long on some systems */
 #if !defined(SIZEOF_PID_T) || SIZEOF_PID_T == SIZEOF_INT
@@ -1177,73 +1173,6 @@ unistd_sysconf(/*@unused@*/ PyObject* self, PyObject* args, PyObject* kwds)
     return PyInt_FromLong(res);
 }
 
-PyDoc_STRVAR(unistd_get_inheritable__doc__,
-"");
-
-static PyObject*
-unistd_get_inheritable( PyObject* self, PyObject* args, PyObject* kwds )
-{
-    int fd=0;
-    static char *kwlist[] = {"fd", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i", kwlist, &fd))
-        return NULL;
-
-    int flags;
-    flags = fcntl(fd, F_GETFD, 0);
-    if (flags == -1) {
-        return PyErr_SetFromErrno(PyExc_OSError);
-    }
-    return PyBool_FromLong(!(flags & FD_CLOEXEC));
-}
-
-PyDoc_STRVAR(unistd_set_inheritable__doc__,
-"");
-
-static PyObject*
-unistd_set_inheritable( PyObject* self, PyObject* args, PyObject* kwds )
-{
-    int fd=-1;
-    PyObject* inheritable = Py_False;
-    static char *kwlist[] = {"fd", "inheritable", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "i|O!", kwlist, &fd, &PyBool_Type, &inheritable))
-        return NULL;
-   
-#if defined(HAVE_SYS_IOCTL_H) && defined(FIOCLEX) && defined(FIONCLEX)
-    int request;
-    int err;
- 
-    if (PyObject_IsTrue(inheritable)){
-        request = FIONCLEX;
-    }else{
-        request = FIOCLEX;
-    }
-    err = ioctl(fd, request, NULL);
-    if (err) {
-        return PyErr_SetFromErrno(PyExc_OSError);
-    }
-    Py_RETURN_TRUE;
-#else
-    int flags;
-    int res;
-    
-    flags = fcntl(fd, F_GETFD);
-    if (flags < 0) {
-        return PyErr_SetFromErrno(PyExc_OSError);
-    }
-
-    if (PyObject_IsTrue(inheritable)){
-        flags &= ~FD_CLOEXEC;
-    }
-    else{
-        flags |= FD_CLOEXEC;
-    }
-    res = fcntl(fd, F_SETFD, flags);
-    if (res < 0) {
-        return PyErr_SetFromErrno(PyExc_OSError);
-    }
-    Py_RETURN_TRUE;
-#endif
-}
 
 static PyMethodDef unistd_methods[] = {
     {"access", (PyCFunction)unistd_access, METH_KEYWORDS, unistd_access__doc__},
@@ -1309,10 +1238,6 @@ static PyMethodDef unistd_methods[] = {
     {"vfork", (PyCFunction)unistd_vfork, METH_KEYWORDS, unistd_vfork__doc__},
     {"write", (PyCFunction)unistd_write, METH_KEYWORDS, unistd_write__doc__},
     {"write", (PyCFunction)unistd_write, METH_KEYWORDS, unistd_write__doc__},
-
-    {"get_inheritable", (PyCFunction)unistd_get_inheritable, METH_KEYWORDS, unistd_get_inheritable__doc__},
-    {"set_inheritable", (PyCFunction)unistd_set_inheritable, METH_KEYWORDS, unistd_set_inheritable__doc__},
-
     {NULL}
 };
 
