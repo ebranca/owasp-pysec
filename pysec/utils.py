@@ -52,7 +52,6 @@ def xrange(*args):
     else:
         raise TypeError("xrange() requires 1-3 int arguments")
     if step < 0:
-        start, stop = stop, start
         bcmp = operator.gt
     elif step > 0:
         bcmp = operator.lt
