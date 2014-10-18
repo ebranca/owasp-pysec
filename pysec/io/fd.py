@@ -18,14 +18,17 @@
 #
 # -*- coding: ascii -*-
 """Contains FD and FD-like classes for operations with file descriptors"""
-from pysec.core import Error, Object, unistd, dirent
-from pysec.xsplit import xbounds
-from pysec.alg import knp_first
+import os
+
+from pysec.core import Error, Object, unistd, dirent, fcntl
+from pysec.core import stat as pstat
+from pysec.core import socket
 from pysec.io import fcheck
 from pysec.utils import xrange
-import os
-import fcntl
+from pysec import check
 
+import inspect
+import stat
 
 
 class FDError(Error):
@@ -55,11 +58,20 @@ class IncompleteWrite(FDError):
         self.size = int(size)
 
 
+class WrongFileType(FDError):
+
+    def __init__(self, ftype, fd=None, path=None):
+        super(WrongFileType, self).__init__(fd)
+        self.ftype = ftype
+        self.fd = None if fd is None else int(fd)
+        self.path = None if path is None else str(path)
+
+
 def read_check(func):
     """Decorator to control read permission in reader methods"""
     def _read(fd, *args, **kargs):
         """*func* wrapped with read check"""
-        if not fd.flags & os.O_WRONLY:
+        if not fd.flags & fcntl.O_WRONLY:
             return func(fd, *args, **kargs)
         raise NotReadableFD(fd)
     return _read
@@ -69,7 +81,7 @@ def write_check(func):
     """Decorator to control write permission in writer methods"""
     def _write(fd, *args, **kargs):
         """*func* wrapped with write check"""
-        if fd.flags & os.O_WRONLY or fd.flags & os.O_APPEND:
+        if fd.flags & fcntl.O_WRONLY or fd.flags & fcntl.O_APPEND:
             return func(fd, *args, **kargs)
         raise NotWriteableFD(fd)
     return _write
@@ -173,6 +185,18 @@ class FD(Object):
         """Set file descriptor's flags (fcntl.F_SETFL)"""
         fcntl.fcntl(self.fd, fcntl.F_SETFL, int(flags))
 
+    @property
+    def can_read(self):
+        return NotImplemented
+
+    @property
+    def can_write(self):
+        return NotImplemented
+
+    @property
+    def can_exec(self):
+        return NotImplemented
+
 
 ### Open modes for regular files
 # create a new file and raise error if it exists, use read mode
@@ -195,88 +219,39 @@ FO_APEXTR = 7
 FO_READ = 8
 # open the file in write-only mode, if it doesn't exist create it
 FO_WRITE = 9
+# open the file in write-only mode, truncate to zero length or create file for writing
+FO_WRITETR = 10
 # open the file in append mode, if it doesn't exist create it
-FO_APPEND = 10
+FO_APPEND = 11
 
 
-_FO_NEW_MODES = FO_READNEW, FO_WRNEW, FO_APNEW, FO_READ, FO_WRITE, FO_APPEND
+_FO_NEW_FLAGS = FO_READNEW, FO_WRNEW, FO_APNEW, FO_READ, FO_WRITE, FO_APPEND, FO_WRITETR 
 
 
-FO_MODES = FO_READNEW, FO_READEX, FO_WRNEW, FO_WREX, FO_WREXTR, \
-           FO_APNEW, FO_APEX, FO_APEXTR, FO_READ, FO_WRITE, FO_APPEND
+FOFLAGS2OFLAGS = {
+    FO_READNEW: fcntl.O_RDONLY | fcntl.O_CREAT | fcntl.O_EXCL,
+    FO_READEX:  fcntl.O_RDONLY,
+    FO_WRNEW:   fcntl.O_WRONLY | fcntl.O_CREAT | fcntl.O_EXCL,
+    FO_WREX:    fcntl.O_WRONLY,
+    FO_WREXTR:  fcntl.O_WRONLY | fcntl.O_TRUNC,
+    FO_APNEW:   fcntl.O_WRONLY | fcntl.O_APPEND | fcntl.O_CREAT | fcntl.O_EXCL,
+    FO_APEX:    fcntl.O_WRONLY | fcntl.O_APPEND,
+    FO_APEXTR:  fcntl.O_WRONLY | fcntl.O_APPEND | fcntl.O_TRUNC,
+    FO_READ:    fcntl.O_RDONLY | fcntl.O_CREAT,
+    FO_WRITE:   fcntl.O_WRONLY | fcntl.O_CREAT,
+    FO_WRITETR: fcntl.O_WRONLY | fcntl.O_CREAT | fcntl.O_TRUNC,
+    FO_APPEND:  fcntl.O_WRONLY | fcntl.O_APPEND | fcntl.O_CREAT
+}
 
 
-def _fo_readnew(fpath, mode):
-    """Creates and open a regular file in read-only mode,
-    raises an error if it exists"""
-    return os.open(fpath, os.O_RDONLY | os.O_CREAT | os.O_EXCL, mode)
-
-
-def _fo_readex(fpath, _):
-    """Opens a regular file in read-only mode,
-    raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_RDONLY)
-
-
-def _fo_wrnew(fpath, mode):
-    """Creates and opens a regular file in write-only,
-    raises an error if it exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
-
-
-def _fo_wrex(fpath, _):
-    """Opens a regular file in write-only mode,
-    raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_WRONLY)
-
-    
-def _fo_wrextr(fpath, _):
-    """Opens a regular file in write-only mode and truncates it,
-    raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_TRUNC)
-    
-
-def _fo_apnew(fpath, mode):
-    """Creates and opens a regular file in append mode,
-    raises an error if it exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_APPEND | os.O_CREAT | os.O_EXCL, mode)
-
-
-def _fo_apex(fpath, _):
-    """Opens a regular file in append mode,
-    raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_APPEND)
-
-
-def _fo_apextr(fpath, _):
-    """Opens a regular file in append mode and truncates it,
-    raises an error if it doesn't exists"""
-    return os.open(fpath, os.O_WRONLY | os.O_APPEND | os.O_TRUNC)
-
-
-def _fo_read(fpath, mode):
-    """Opens a regular file in read-only mode,
-    if it doesn't exist a new file will be created"""
-    return os.open(fpath, os.O_RDONLY | os.O_CREAT, mode)
-
-
-def _fo_write(fpath, mode):
-    """Opens a regular file in write-only mode,
-    if it doesn't exist a new file will be created"""
-    return os.open(fpath, os.O_WRONLY | os.O_CREAT, mode)
-
-
-def _fo_append(fpath, mode):
-    """Opens a regular file in append mode,
-    if it doesn't exist a new file will be created"""
-    return os.open(fpath, os.O_WRONLY | os.O_APPEND | os.O_CREAT, mode)
-
-
-FO_READNEW, FO_READEX, FO_WRNEW, FO_WREX, FO_WREXTR, \
-           FO_APNEW, FO_APEX, FO_READ, FO_WRITE, FO_APPEND
-
-_FOMODE2FUNC = _fo_readnew, _fo_readex, _fo_wrnew, _fo_wrex, _fo_wrextr, \
-               _fo_apnew, _fo_apex, _fo_apextr,_fo_read, _fo_write, _fo_append
+NAME2FOFLAGS = {
+    'r': FO_READNEW,
+    'rb': FO_READNEW,
+    'w': FO_WRITETR,
+    'wb': FO_WRITETR,
+    'a': FO_APPEND,
+    'ab': FO_APPEND,
+}
 
 
 class File(FD):
@@ -284,6 +259,8 @@ class File(FD):
 
     def __init__(self, fd):
         super(self.__class__, self).__init__(fd)
+        if not stat.S_ISREG(self.mode):
+            raise WrongFileType(File, fd=self.fd)
         self.pos = 0
 
     def __len__(self):
@@ -303,25 +280,26 @@ class File(FD):
         raise IndexError('wrong index type: %s' % type(index))
 
     @staticmethod
-    def open(fpath, oflag, mode=0666):
+    @check.delimit('fd-reg-open')
+    def open(fpath, oflags, mode=0666):
         """Open a file descript for a regular file in fpath using the open mode
         specifie by *oflag* with *mode*"""
-        oflag = int(oflag)
-        if oflag not in FO_MODES:
-            raise ValueError("unknown file open mode: %r" % oflag)
+        _oflags = FOFLAGS2OFLAGS.get(int(oflags), None)
+        if oflags is None:
+            raise ValueError("unknown file open mode: %r" % oflags)
         mode = int(mode)
         if not fcheck.mode_check(mode):
             raise ValueError("wrong mode: %r" % oct(mode))
-        fopen = _FOMODE2FUNC[oflag]
         fd = -1
         try:
-            fd = fopen(fpath, mode)
-            fd = File(fd)
-            if mode in _FO_NEW_MODES and not fcheck.ino_check(int(fd)):
+            fd = fcntl.open(fpath, _oflags, mode) if oflags in _FO_NEW_FLAGS \
+                 else fcntl.open(fpath, _oflags)
+            if oflags in _FO_NEW_FLAGS and not fcheck.ino_check(int(fd)):
                 raise OSError("not enough free inodes")
+            fd = File(fd)
         except:
             if fd > -1:
-                os.close(fd)
+                unistd.close(fd)
             raise
         return fd
 
@@ -334,10 +312,10 @@ class File(FD):
             raise ValueError("wrong mode: %r" % oct(mode))
         fd = -1
         try:
-            fd = os.open(fpath, os.O_RDONLY | os.O_CREAT, mode)
+            fd = fcntl.open(fpath, fcntl.O_RDONLY | fcntl.O_CREAT, mode)
         finally:
             if fd >= 0:
-                os.close(fd)
+                unistd.close(fd)
 
     @read_check
     def read(self, size=None, pos=None):
@@ -415,6 +393,10 @@ class File(FD):
                 wlen += _wlen
                 _tries = tries
 
+    def setbit(self, n, bit):
+        byte, offset = divmod(n, 8)
+        self[byte] = self[byte] | (1 << offset)
+
     @write_check
     def truncate(self, length=0):
         """Truncate the file and if the pointer is in a inexistent part of file
@@ -424,9 +406,8 @@ class File(FD):
         if length < 0:
             raise ValueError("negative length: %r" % length)
         size = self.size
-        os.ftruncate(fd, length)
-        if size > length:
-            self.moveto(length)
+        unistd.ftruncate(fd, length)
+        self.moveto(length)
 
     def moveto(self, pos):
         """Move position pointer in position *pos* from start of FD."""
@@ -458,18 +439,21 @@ class File(FD):
             pos = chunk.find(eol)
             if pos < 0:
                 if chunk_end >= stop:
+                    if chunk:
+                        yield line_start, stop
                     break
                 chunk_start = chunk_end - eol_len
                 chunk_end = min(chunk_start + size, stop)
                 chunk = self[chunk_start:chunk_end]
             else:
                 chunk_start = chunk_start + pos + eol_len
+                if chunk_start > stop:
+                    yield line_start, min((chunk_start if keep_eol else (chunk_start - eol_len)), stop)
+                    break
                 yield line_start, chunk_start if keep_eol else (chunk_start - eol_len)
                 line_start = chunk_start
                 chunk = chunk[pos + eol_len:]
                 if not chunk:
-                    if chunk_start >= stop:
-                        break
                     chunk_start = chunk_end - eol_len + 1
                     chunk_end = chunk_start + size
                     chunk = self[chunk_start:chunk_end]
@@ -478,21 +462,22 @@ class File(FD):
         return (self[start:end] for start, end
                 in self.xlines(start, stop, eol, keep_eol, size))
 
+    def readlines(self):
+        return list(self.lines())
+
     def get_line(self, lineno, start=None, max_size=None, eol='\n'):
         lineno = int(lineno)
         start = int(self.pos if start is None else start)
+        eol = str(eol)
         len_eol = len(eol)
         try:
-            for atline, (start, end) in enumerate(xbounds(self, eol, 1, start, (start + max_size) if max_size is not None else None, knp_first)):
+            for atline, (start, end) in enumerate(self.xlines(start, (None if max_size is None else start + max_size), eol, 1)):
                 if atline == lineno:
-                    if start is None:
+                    line = self[start:end]
+                    if not line:
                         return None
-                    if self[end-len_eol:end] == eol:
-                        return self[start:end-len_eol]
                     else:
-                        return None
-                elif atline > lineno:
-                    return None
+                        return line[:-len_eol]
         except StopIteration:
             return None
         return None
@@ -507,17 +492,23 @@ class File(FD):
                              else int(stop), size).indices(len(self))):
             yield self.pread(size, offset)
 
+    def __iter__(self):
+        ch = self.read(1)
+        while ch:
+            yield ch
+            ch = self.read(1)
+
 
 class Directory(FD):
     """Directory represents a Directory's file descriptor."""
 
-    def __init__(self, fd, origin=None):
+    def __init__(self, fd ):
         super(self.__class__, self).__init__(fd)
-        self.origin = os.path.abspath(origin)
-        # self.pos = 0
+        if not stat.S_ISDIR(self.mode):
+            raise WrongFileType(Directory, fd=self.fd)
 
     @staticmethod
-    def open(path):
+    def open(path, create=0, mode=0755):
         """Open a file descriptor for a directory path using read-only mode.
         We keep a copy of the directory path within the object for future
         reference. The object created will keep a file descriptor opened for
@@ -525,12 +516,45 @@ class Directory(FD):
         fd = -1
         path = os.path.abspath(path)
         try:
-            fd = dirent.opendir(path)
-            fd = Directory(fd, path)
-            fd.path = path
+            fd = fcntl.open(path, unistd.O_DIRECTORY|unistd.O_CREAT if create else 0, mode)
+            fd = Directory(fd)
         except:
             if fd > -1:
                 os.close(fd)
+            raise
+        return fd
+
+    def fileat(self, fpath, oflags, mode=0644):
+        """Open a file descript for a regular file in fpath using the open mode
+        specifie by *oflag* with *mode*"""
+        _oflags = FOFLAGS2OFLAGS.get(int(oflags), None)
+        if oflags is None:
+            raise ValueError("unknown file open mode: %r" % oflags)
+        mode = int(mode)
+        if not fcheck.mode_check(mode):
+            raise ValueError("wrong mode: %r" % oct(mode))
+        fd = -1
+        try:
+            fd = fcntl.openat(int(self), fpath, _oflags, mode) \
+                 if oflags in _FO_NEW_FLAGS \
+                 else fcntl.openat(int(self), fpath, _oflags)
+            if oflags in _FO_NEW_FLAGS and not fcheck.ino_check(int(fd)):
+                raise OSError("not enough free inodes")
+            fd = File(fd)
+        except:
+            if fd > -1:
+                unistd.close(fd)
+            raise
+        return fd
+
+    def dirat(self, create=0, mode=0755):
+        fd = -1
+        try:
+            fd = fcntl.openat(int(self), fcntl.O_DIRECTORY|fcntl.O_CREAT if create else 0, mode)
+            fd = Directory(fd)
+        except:
+            if fd > -1:
+                unistd.close(fd)
             raise
         return fd
 
@@ -542,7 +566,7 @@ class Directory(FD):
     def ls(self, filt=lambda _: 1, dot=0, base=None):
         """Return a generator of names of the entries in this directory.
         If dot is true '.' and '..' will be include in the tuple."""
-        base = self.origin if base is None else os.path.abspath(base)
+        base = '' if base is None else os.path.abspath(base)
         if dot:
             return (os.path.join(base, name) for _, name in self.readdir()
                     if filt(os.path.join(base, name)))
@@ -552,15 +576,174 @@ class Directory(FD):
                        filt(os.path.join(base, name)))
 
     def __iter__(self):
-        """Return a iterator of all names of direcotry's entries.
+        """Return a iterator of all names of directory's entries.
         '.' and '..' are included."""
         return (name for _, name in self.readdir())
 
 
-class Socket(FD):
-    """File represents a Socket's file descriptor."""
-    pass
+def for_stream(meth):
+    meth.__sock_family__ = socket.SOCK_STREAM
 
+
+def for_dgram(meth):
+    meth.__sock_family__ = socket.SOCK_DGRAM
+
+
+SOCK_STREAM = socket.SOCK_STREAM
+SOCK_DGRAM = socket.SOCK_DGRAM
+
+AF_INET = socket.AF_INET
+AF_INET6 = socket.AF_INET6
+AF_UNIX = socket.AF_UNIX
+
+
+class Socket(FD):
+    """Class to interact with a socket"""
+
+    def __init__(self, fd, origin=None):
+        super(self.__class__, self).__init__(fd)
+        if not stat.S_ISSOCK(self.mode):
+            raise WrongFileType(Socket, fd=self.fd)
+        family = self.family
+        for name, meth in inspect.getmembers(self, predicate=inspect.ismethod):
+            ok = getattr(meth, '__sock_family__', None)
+            if ok is not None and not ok:
+                delattr(meth, name)
+
+    @property
+    def family(self):
+        return socket.getsocksolopt(int(self), socket.SO_DOMAIN)
+
+    domain = family
+
+    @property
+    def can_accept(self):
+        return socket.getsocksolopt(int(self), socket.SO_ACCEPTCONN)
+
+    @property
+    @for_dgram
+    def broadcast(self):
+        return socket.getsocksolopt(int(self), socket.SO_BROADCAST)
+
+    @property
+    def debug(self):
+        return socket.getsocksolopt(int(self), socket.SO_DEBUG)
+
+    @property
+    def route(self):
+        return socket.getsocksolopt(int(self), socket.SO_DONTROUTE)
+
+    @property
+    def error(self):
+        return socket.getsocksolopt(int(self), socket.SO_ERROR)
+
+    @property
+    @for_stream
+    def keepalive(self):
+        return socket.getsocksolopt(int(self), socket.SO_KEEPALIVE)
+
+    @property
+    def linger(self):
+        return socket.getsocksolopt(int(self), socket.SO_LINGER)
+
+    @property
+    def oob_in_line(self):
+        return socket.getsocksolopt(int(self), socket.SO_OOBINLINE)
+
+    @property
+    def protocol(self):
+        return socket.getsocksolopt(int(self), socket.SO_PROTOCOL)
+
+    @property
+    def recv_bufsize(self):
+        return socket.getsocksolopt(int(self), socket.SO_RCVBUF)
+
+    @property
+    def rcv_low_at(self):
+        return socket.getsocksolopt(int(self), socket.SO_RCVLOWAT)
+
+    @property
+    def recv_timeout(self):
+        return socket.getsocksolopt(int(self), socket.SO_RCVTIMEO)
+
+    @property
+    def send_bufsize(self):
+        return socket.getsocksolopt(int(self), socket.SO_SNDBUF)
+
+    @property
+    def snd_low_at(self):
+        return socket.getsocksolopt(int(self), socket.SO_SNDLOWAT)
+
+    @property
+    def send_timeout(self):
+        return socket.getsocksolopt(int(self), socket.SO_SNDTIMEO)
+
+    @property
+    def type(self):
+        return socket.getsocksolopt(int(self), socket.SO_TYPE)
+
+    @property
+    def reuse_address(self):
+        return socket.getsocksolopt(int(self), socket.SO_REUSEADDR)
+
+    @staticmethod
+    def open_stream(domain=socket.AF_INET):
+        return Socket.open(domain, socket.SOCK_STREAM, 0)
+
+    @staticmethod
+    def open_dgram(domain=socket.AF_INET):
+        return Socket.open(domain, socket.SOCK_DGRAM, 0)
+
+    @staticmethod
+    def open(domain=socket.AF_INET, type=socket.SOCK_STREAM, protocol=0):
+        fd = -1
+        try:
+            fd = socket.socket(domain, type, protocol)
+            fd = Socket(fd)
+        except:
+            if fd > -1:
+                unistd.close(fd)
+            raise
+        return fd
+
+    def recv(self, length, flags=0):
+        return socket.recv_from(int(self), length, flags)
+
+    @for_dgram
+    def recv_from(self, length, flags=0):
+        return socket.recv_from(int(self), length, flags)
+
+    @for_stream
+    def send(self, msg, flags):
+        return socket.send(int(self), msg, flags)
+
+    @for_stream
+    def sendall(self, msg, flags=0, tries=0):
+        _tries = tries = int(tries)
+        if tries < 0:
+            raise ValueError("trie must be >= 0")
+        fd = int(self)
+        msg_len = len(msg)
+        sent = socket.send(fd, msg, flags)
+        _sent = 0
+        while sent < msg_len:
+            _sent = socket.send(fd, msg, flags)
+            if not _sent:
+                if not _tries:
+                    raise IncompleteWrite(fd, sent, tries)
+                _tries -= 1
+            else:
+                _tries = tries
+            sent += _sent
+
+    @for_dgram
+    def send_to(self, msg, to, flags=0):
+        return socket.send(msg, to, flags)
+
+    read = recv
+
+    write = sendall
+        
 
 class BlockDev(FD):
     """File represents a Block Device's file descriptor."""
@@ -575,3 +758,4 @@ class CharDev(FD):
 class FIFO(FD):
     """File represents a FIFO's file descriptor."""
     pass
+

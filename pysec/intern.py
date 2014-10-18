@@ -59,7 +59,8 @@ def get_frame_type(frame=None, get_module=None):
     elif same_name and not same_namespace:
         ftype = FRAME_CLASS
     elif not same_namespace:
-        kind = FRAME_FUNCTION
+        ftype = FRAME_FUNCTION
     else:
         ftype = FRAME_UNKNOWN
     return ftype
+

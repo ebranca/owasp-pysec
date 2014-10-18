@@ -125,15 +125,18 @@ LIMITS = {}
 
 def delimit(limit_name):
     limits = LIMITS.get(limit_name, None)
-    parsers = in_limits = out_limits = ()
-    lit = iter(limits)
-    try:
-        parsers = lit.next()
-        in_limits = lit.next()
-        out_limits = lit.next()
-    except StopIteration:
-        pass
     def _delimit(func):
+        if limits is None:
+            return func
+        parsers = {}
+        in_limits = out_limits = ()
+        lit = iter(limits)
+        try:
+            parsers = lit.next()
+            in_limits = lit.next()
+            out_limits = lit.next()
+        except StopIteration:
+            pass
         if not parsers and not in_limits and not out_limits:
             return func
         def __delimit(*args, **kwds):

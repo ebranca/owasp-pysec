@@ -18,9 +18,8 @@
 #
 # -*- coding: ascii -*-
 import os
-import kv
 import kyotocabinet as kyoto
-from pysec import log
+from pysec import log, kv
 
 
 __name__ = 'pysec.kv.kyoto'
@@ -114,7 +113,6 @@ class KyotoKV(kv.HardKV):
         return list(self.iteritems())
 
     def iteritems(self):
-        parse = self.parse
         unparse = self.unparse
         try:
             cursor = self.fk.cursor()
@@ -131,7 +129,6 @@ class KyotoKV(kv.HardKV):
         return list(self.itervalues())
 
     def itervalues(self):
-        unparse = self.unparse
         return (value for _, value in self.iteritems())
 
     def keys(self):

@@ -31,13 +31,27 @@ import re
 from pysec import lang
 
 
-def xrange(start, stop, step=1):
-    """This xrange use python's integers and have not limits of
+def xrange(*args):
+    """xrange([start,] stop[, step]) -> xrange object
+
+    This xrange use python's integers and has not limits of
     machine integers."""
-    stop = int(stop)
-    step = int(step)
+    len_args = len(args)
+    if len_args == 1:
+        stop = int(args[0])
+        start = 0
+        step = 1
+    elif len_args == 2:
+        start = int(args[0])
+        stop = int(args[1])
+        step = 1
+    elif len_args == 3:
+        start = int(args[0])
+        stop = int(args[1])
+        step = int(args[2])
+    else:
+        raise TypeError("xrange() requires 1-3 int arguments")
     if step < 0:
-        start, stop = stop, start
         bcmp = operator.gt
     elif step > 0:
         bcmp = operator.lt
@@ -47,6 +61,10 @@ def xrange(start, stop, step=1):
     while bcmp(act, stop):
         yield act
         act += step
+
+
+def range(*args):
+    return list(xrange(*args))
 
 
 def top_n(values, first_n=10):
@@ -138,7 +156,7 @@ def ilen(gen, max=None):
         max = int(max)
         if max < 0:
             raise ValueError("invalid negative max: %d" % max)
-        for i in xrange(max):
+        for i in xrange(0, max):
             try:
                 gen.next()
             except StopIteration:

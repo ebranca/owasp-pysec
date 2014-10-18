@@ -74,16 +74,12 @@ def set_lang(locale):
     if not loc:
         raise ValueError(LANG_LOCALE_NOT_FOUND % locale)
     for name in dir(loc):
-        print name
         if not name.isupper() or name.startswith('_'):
             continue
         msg = globals().get(name, None)
-        print repr(msg)
-        print
         if not isinstance(msg, str):
             continue
         msg = getattr(loc, name, None)
         if isinstance(msg, str):
             globals()[name] = msg
-    _default = locale
 

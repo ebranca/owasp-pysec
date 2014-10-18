@@ -17,5 +17,8 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-"""Implementations of protocols and utilities for networking"""
+
+keep_lib_log = 0
+
+limits = {}
 

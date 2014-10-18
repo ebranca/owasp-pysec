@@ -39,6 +39,8 @@ classifiers = [
 
 exts = [
     Extension('pysec.core.unistd', ['pysec/core/unistd.c'], libraries=['crypt']),
+    Extension('pysec.core.fcntl', ['pysec/core/fcntl.c']),
+    Extension('pysec.core.stat', ['pysec/core/stat.c']),
     Extension('pysec.core.memory', ['pysec/core/memory.c']),
     Extension('pysec.core.dirent', ['pysec/core/dirent.c'])
 ]

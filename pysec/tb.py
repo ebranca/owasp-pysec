@@ -27,6 +27,7 @@ import tokenize
 
 from pysec.core import Object
 from pysec.io import fd
+from pysec.strings import erepr
 from pysec.xsplit import xlines
 
 
@@ -185,7 +186,7 @@ def long_tb(exc_type, exc_value, exc_tb, max_length=80):
         path = os.path.abspath(exc_tb.tb_frame.f_code.co_filename)
         lineno = exc_tb.tb_lineno - 1
         traceback.append('[%d]' % lvl)
-        traceback.append('  Where: %r:%d %r' % (path, lineno, exc_tb.tb_frame.f_code.co_name))
+        traceback.append('  Where: %r:%d %r' % (path, lineno+1, exc_tb.tb_frame.f_code.co_name))
         with fd.File.open(path, fd.FO_READEX) as src:
             line = src.get_line(lineno)
         traceback.append('  Line: %r' % line.strip())
@@ -203,7 +204,6 @@ def long_tb(exc_type, exc_value, exc_tb, max_length=80):
 def deep_tb(exc_type, exc_value, exc_tb):
     traceback = ['=== Traceback (most recent call last) ===']
     lvl = 0
-    prev = None
     while exc_tb:
         path = os.path.abspath(exc_tb.tb_frame.f_code.co_filename)
         lineno = exc_tb.tb_lineno
@@ -217,17 +217,18 @@ def deep_tb(exc_type, exc_value, exc_tb):
         for token, where, val in linevars(line.strip(), exc_tb.tb_frame):
             if where is None:
                 val = '<undefined>'
-            traceback.append('    %r: %r' % (token, val))
+            else:
+                val = '[%s] %r' % (erepr(getattr(type(val), '__name__', type(val))), val)
+            traceback.append('    %r: %s' % (token, val))
         traceback.append('  Code:')
         for ist, lineno, label, op, arg in disassemble(exc_tb.tb_frame.f_code):
-            prefix = '  >> ' if ist == exc_tb.tb_lasti else '   '
+            prefix = '>> ' if ist == exc_tb.tb_lasti else '   '
             postfix = ' << %s' % exc_type.__name__ if ist == exc_tb.tb_lasti else ''
             if lineno == exc_tb.tb_lineno:
                 if arg is NOVAL:
-                    traceback.append('    %s%s%s' % (prefix, op, postfix))
+                    traceback.append('  %s%s%s' % (prefix, op, postfix))
                 else:
-                    traceback.append('    %s%s %r%s' % (prefix, op, arg, postfix))
-        prev = exc_tb
+                    traceback.append('  %s%s %r%s' % (prefix, op, arg, postfix))
         exc_tb = exc_tb.tb_next
         lvl += 1
     traceback.append('[ERROR]')

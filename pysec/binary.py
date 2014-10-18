@@ -1,5 +1,8 @@
 #!/usr/bin/python -OOBRStt
 """"""
+from pysec.core import is_int, is_str, is_dict
+
+
 SPECIAL_CHARS = '\\', '*', '?', '!', '[', ']', '{', '}', '-', ',', '#', '@'
 
 ALPHA = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -12,14 +15,99 @@ PRINTABLE = tuple(chr(ch) for ch in xrange(0x20, 0x7F))
 NOT_PRINTABLE = tuple(chr(ch) for ch in xrange(0x00, 0x20))
 VISIBLE = tuple(chr(ch) for ch in xrange(0x21, 0x7F))
 NOT_VISIBLE = tuple(chr(ch) for ch in xrange(0x00, 0x21))
-ASCII_CHAR = tuple(chr(ch) for ch in xrange(0x00, 0x7F))
+ASCII_CHAR = tuple(chr(ch) for ch in xrange(0x00, 0x80))
 
+CTRL_CHAR = ''.join(chr(ch) for ch in xrange(0x00, 0x1F)) + '\x7F'
+
+CTRL2ABBR = {
+    '\x00': 'NUL',
+    '\x01': 'SOH',
+    '\x02': 'STX',
+    '\x03': 'ETX',
+    '\x04': 'EOT',
+    '\x05': 'ENQ',
+    '\x06': 'ACK',
+    '\x07': 'BEL',
+    '\x08': 'BS',
+    '\x09': 'HT',
+    '\x0A': 'LF',
+    '\x0B': 'VT',
+    '\x0C': 'FF',
+    '\x0D': 'CR',
+    '\x0E': 'SO',
+    '\x0F': 'SI',
+    '\x10': 'DLE',
+    '\x11': 'DC1',
+    '\x12': 'DC2',
+    '\x13': 'DC3',
+    '\x14': 'DC4',
+    '\x15': 'NAK',
+    '\x16': 'SYN',
+    '\x17': 'ETB',
+    '\x18': 'CAN',
+    '\x19': 'EM',
+    '\x1A': 'SUB',
+    '\x1B': 'ESC',
+    '\x1C': 'FS',
+    '\x1D': 'GS',
+    '\x1E': 'RS',
+    '\x1F': 'US',
+    '\x7F': 'DEL',
+}
+
+CTRL2CARETNOTATION = {
+    '\x00': '^@',
+    '\x01': '^A',
+    '\x02': '^B',
+    '\x03': '^C',
+    '\x04': '^D',
+    '\x05': '^E',
+    '\x06': '^F',
+    '\x07': '^G',
+    '\x08': '^H',
+    '\x09': '^I',
+    '\x0A': '^J',
+    '\x0B': '^K',
+    '\x0C': '^L',
+    '\x0D': '^M',
+    '\x0E': '^N',
+    '\x0F': '^O',
+    '\x10': '^P',
+    '\x11': '^Q',
+    '\x12': '^R',
+    '\x13': '^S',
+    '\x14': '^T',
+    '\x15': '^U',
+    '\x16': '^V',
+    '\x17': '^W',
+    '\x18': '^X',
+    '\x19': '^Y',
+    '\x1A': '^Z',
+    '\x1B': '^[',
+    '\x1C': '^\\',
+    '\x1D': '^]',
+    '\x1E': '^^',
+    '\x1F': '^_',
+    '\x7F': '^?',
+}
+
+CTRL2CESCAPE = {
+    '\x00': r'\0',
+    '\x07': r'\a',
+    '\x08': r'\b',
+    '\x09': r'\t',
+    '\x0A': r'\n',
+    '\x0B': r'\v',
+    '\x0C': r'\f',
+    '\x0D': r'\r',
+    '\x1B': r'\e',
+}
 
 BACKSLASH_ORD = ord('\\')
 
 
 MASK_NONE_CHAR = 0
-MASK_ALL_CHAR = 2 ** 257 - 1
+MASK_ALL_CHAR = object()
 MASK_PRINT = reduce(lambda a, b: a | b, (1 << ord(ch) for ch in PRINTABLE))
 MASK_NOT_PRINT = (2 ** 0x20) - 1
 MASK_ALPHNUM = reduce(lambda a, b: a | b, (1 << ord(ch) for ch in ALPHANUMERIC))
@@ -101,6 +189,8 @@ def byte_search(text, pattern, offset=0):
                 p += 1
             else:
                 p = 0
+        elif pc is MASK_ALL_CHAR:
+            p += 1
         elif isinstance(pc, (int, long)):
             if pc & (1 << (ord(tc) + 1)):
                 p += 1
@@ -144,7 +234,7 @@ class SearchTree(object):
 
 
 def byte_msearch(text, patterns, offset=0):
-    if isinstance(patterns, dict):
+    if is_dict(patterns):
         patterns = patterns.iteritems()
     else:
         patterns = ((p, None) for p in patterns)
@@ -170,15 +260,19 @@ def byte_msearch(text, patterns, offset=0):
         while actual_trees:
             tree = actual_trees.pop()
             if tree.eop:
-                yield t, [node.token for node in reversed(tuple(node.ancestors())[:-1])], tree.name
+                yield t, [node.token for node in reversed(tuple(tree.ancestors())[:-1])], tree.name
                 tree.eop = 0
             for pc, node in tree.items():
-                if isinstance(pc, str):
+                if is_str(pc):
+                    pc = str(pc)
                     if pc == tc:
                         next_trees.add(node)
                     else:
                         next_trees.add(root)
-                elif isinstance(pc, (int, long)):
+                elif pc is MASK_ALL_CHAR:
+                    next_trees.add(node)
+                elif is_int(pc):
+                    pc = int(pc)
                     if pc & (1 << (ord(tc) + 1)):
                         next_trees.add(node)
                     else:
@@ -187,3 +281,4 @@ def byte_msearch(text, patterns, offset=0):
                     raise Exception("unknown token: %r" % pc)
         actual_trees = next_trees
         t += 1
+

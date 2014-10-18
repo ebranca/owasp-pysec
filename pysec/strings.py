@@ -20,7 +20,6 @@
 """Various utilities for strings manipulation."""
 from pysec import lang
 from pysec.utils import xrange, eq
-from pysec.xsplit import xbounds
 
 
 def erepr(s):
@@ -89,3 +88,4 @@ def only_printable(string):
 def only_visible(string):
     """Remove all not visible characters from *string*"""
     return ''.join(ch for ch in string if 33 <= ord(ch) <= 126)
+

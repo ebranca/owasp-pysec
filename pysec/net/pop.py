@@ -19,7 +19,6 @@
 # -*- coding: ascii -*-
 """Implementations of POP protocols"""
 import errno
-from functools import partial
 import select
 import socket
 from pysec.core import memory, Object
