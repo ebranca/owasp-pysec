@@ -141,6 +141,9 @@ initfcntl(void)
     if(PyModule_AddIntMacro(m, O_CREAT))
         return;
 
+    if(PyModule_AddIntMacro(m, O_DIRECTORY))
+        return;
+
     if(PyModule_AddIntMacro(m, O_EXCL))
         return;
 
