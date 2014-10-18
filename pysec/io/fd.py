@@ -22,10 +22,12 @@ import os
 
 from pysec.core import Error, Object, unistd, dirent, fcntl
 from pysec.core import stat as pstat
+from pysec.core import socket
 from pysec.io import fcheck
 from pysec.utils import xrange
 from pysec import check
 
+import inspect
 import stat
 
 
@@ -182,6 +184,18 @@ class FD(Object):
     def flags(self, flags):
         """Set file descriptor's flags (fcntl.F_SETFL)"""
         fcntl.fcntl(self.fd, fcntl.F_SETFL, int(flags))
+
+    @property
+    def can_read(self):
+        return NotImplemented
+
+    @property
+    def can_write(self):
+        return NotImplemented
+
+    @property
+    def can_exec(self):
+        return NotImplemented
 
 
 ### Open modes for regular files
@@ -478,15 +492,20 @@ class File(FD):
                              else int(stop), size).indices(len(self))):
             yield self.pread(size, offset)
 
+    def __iter__(self):
+        ch = self.read(1)
+        while ch:
+            yield ch
+            ch = self.read(1)
+
 
 class Directory(FD):
     """Directory represents a Directory's file descriptor."""
 
-    def __init__(self, fd, origin=None):
+    def __init__(self, fd ):
         super(self.__class__, self).__init__(fd)
         if not stat.S_ISDIR(self.mode):
             raise WrongFileType(Directory, fd=self.fd)
-        self.origin = os.path.abspath(origin)
 
     @staticmethod
     def open(path, create=0, mode=0755):
@@ -497,11 +516,8 @@ class Directory(FD):
         fd = -1
         path = os.path.abspath(path)
         try:
-            if create:
-                fd = pstat.mkdir(path, mode)
-            else:
-                fd = dirent.opendir(path)
-            fd = Directory(fd, path)
+            fd = fcntl.open(path, unistd.O_DIRECTORY|unistd.O_CREAT if create else 0, mode)
+            fd = Directory(fd)
         except:
             if fd > -1:
                 os.close(fd)
@@ -531,10 +547,10 @@ class Directory(FD):
             raise
         return fd
 
-    def dirat(self, fpath, create=0):
+    def dirat(self, create=0, mode=0755):
         fd = -1
         try:
-            fd = fcntl.openat(int(self), fpath, fcntl.O_RDONLY|fcntl.O_DIRECTORY, mode)
+            fd = fcntl.openat(int(self), fcntl.O_DIRECTORY|fcntl.O_CREAT if create else 0, mode)
             fd = Directory(fd)
         except:
             if fd > -1:
@@ -550,7 +566,7 @@ class Directory(FD):
     def ls(self, filt=lambda _: 1, dot=0, base=None):
         """Return a generator of names of the entries in this directory.
         If dot is true '.' and '..' will be include in the tuple."""
-        base = self.origin if base is None else os.path.abspath(base)
+        base = '' if base is None else os.path.abspath(base)
         if dot:
             return (os.path.join(base, name) for _, name in self.readdir()
                     if filt(os.path.join(base, name)))
@@ -560,15 +576,174 @@ class Directory(FD):
                        filt(os.path.join(base, name)))
 
     def __iter__(self):
-        """Return a iterator of all names of direcotry's entries.
+        """Return a iterator of all names of directory's entries.
         '.' and '..' are included."""
         return (name for _, name in self.readdir())
 
 
-class Socket(FD):
-    """File represents a Socket's file descriptor."""
-    pass
+def for_stream(meth):
+    meth.__sock_family__ = socket.SOCK_STREAM
 
+
+def for_dgram(meth):
+    meth.__sock_family__ = socket.SOCK_DGRAM
+
+
+SOCK_STREAM = socket.SOCK_STREAM
+SOCK_DGRAM = socket.SOCK_DGRAM
+
+AF_INET = socket.AF_INET
+AF_INET6 = socket.AF_INET6
+AF_UNIX = socket.AF_UNIX
+
+
+class Socket(FD):
+    """Class to interact with a socket"""
+
+    def __init__(self, fd, origin=None):
+        super(self.__class__, self).__init__(fd)
+        if not stat.S_ISSOCK(self.mode):
+            raise WrongFileType(Socket, fd=self.fd)
+        family = self.family
+        for name, meth in inspect.getmembers(self, predicate=inspect.ismethod):
+            ok = getattr(meth, '__sock_family__', None)
+            if ok is not None and not ok:
+                delattr(meth, name)
+
+    @property
+    def family(self):
+        return socket.getsocksolopt(int(self), socket.SO_DOMAIN)
+
+    domain = family
+
+    @property
+    def can_accept(self):
+        return socket.getsocksolopt(int(self), socket.SO_ACCEPTCONN)
+
+    @property
+    @for_dgram
+    def broadcast(self):
+        return socket.getsocksolopt(int(self), socket.SO_BROADCAST)
+
+    @property
+    def debug(self):
+        return socket.getsocksolopt(int(self), socket.SO_DEBUG)
+
+    @property
+    def route(self):
+        return socket.getsocksolopt(int(self), socket.SO_DONTROUTE)
+
+    @property
+    def error(self):
+        return socket.getsocksolopt(int(self), socket.SO_ERROR)
+
+    @property
+    @for_stream
+    def keepalive(self):
+        return socket.getsocksolopt(int(self), socket.SO_KEEPALIVE)
+
+    @property
+    def linger(self):
+        return socket.getsocksolopt(int(self), socket.SO_LINGER)
+
+    @property
+    def oob_in_line(self):
+        return socket.getsocksolopt(int(self), socket.SO_OOBINLINE)
+
+    @property
+    def protocol(self):
+        return socket.getsocksolopt(int(self), socket.SO_PROTOCOL)
+
+    @property
+    def recv_bufsize(self):
+        return socket.getsocksolopt(int(self), socket.SO_RCVBUF)
+
+    @property
+    def rcv_low_at(self):
+        return socket.getsocksolopt(int(self), socket.SO_RCVLOWAT)
+
+    @property
+    def recv_timeout(self):
+        return socket.getsocksolopt(int(self), socket.SO_RCVTIMEO)
+
+    @property
+    def send_bufsize(self):
+        return socket.getsocksolopt(int(self), socket.SO_SNDBUF)
+
+    @property
+    def snd_low_at(self):
+        return socket.getsocksolopt(int(self), socket.SO_SNDLOWAT)
+
+    @property
+    def send_timeout(self):
+        return socket.getsocksolopt(int(self), socket.SO_SNDTIMEO)
+
+    @property
+    def type(self):
+        return socket.getsocksolopt(int(self), socket.SO_TYPE)
+
+    @property
+    def reuse_address(self):
+        return socket.getsocksolopt(int(self), socket.SO_REUSEADDR)
+
+    @staticmethod
+    def open_stream(domain=socket.AF_INET):
+        return Socket.open(domain, socket.SOCK_STREAM, 0)
+
+    @staticmethod
+    def open_dgram(domain=socket.AF_INET):
+        return Socket.open(domain, socket.SOCK_DGRAM, 0)
+
+    @staticmethod
+    def open(domain=socket.AF_INET, type=socket.SOCK_STREAM, protocol=0):
+        fd = -1
+        try:
+            fd = socket.socket(domain, type, protocol)
+            fd = Socket(fd)
+        except:
+            if fd > -1:
+                unistd.close(fd)
+            raise
+        return fd
+
+    def recv(self, length, flags=0):
+        return socket.recv_from(int(self), length, flags)
+
+    @for_dgram
+    def recv_from(self, length, flags=0):
+        return socket.recv_from(int(self), length, flags)
+
+    @for_stream
+    def send(self, msg, flags):
+        return socket.send(int(self), msg, flags)
+
+    @for_stream
+    def sendall(self, msg, flags=0, tries=0):
+        _tries = tries = int(tries)
+        if tries < 0:
+            raise ValueError("trie must be >= 0")
+        fd = int(self)
+        msg_len = len(msg)
+        sent = socket.send(fd, msg, flags)
+        _sent = 0
+        while sent < msg_len:
+            _sent = socket.send(fd, msg, flags)
+            if not _sent:
+                if not _tries:
+                    raise IncompleteWrite(fd, sent, tries)
+                _tries -= 1
+            else:
+                _tries = tries
+            sent += _sent
+
+    @for_dgram
+    def send_to(self, msg, to, flags=0):
+        return socket.send(msg, to, flags)
+
+    read = recv
+
+    write = sendall
+        
 
 class BlockDev(FD):
     """File represents a Block Device's file descriptor."""
