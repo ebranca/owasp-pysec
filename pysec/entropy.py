@@ -62,7 +62,7 @@ class Entropy(Dict):
         if base < 2:
             raise ValueError(lang.ENT_NEGATIVE_BASE % base)
         count = self.count
-        for value in self.itervalues():
+        for value in self.iteritems():
             if not value:
                 continue
             p_i = float(value) / count
