@@ -42,10 +42,10 @@ def set_builtins():
         'a': fd.FO_APPEND
     }
     def open(path, mode='r'):
-        mode = _OPEN_MODES.get(str(mode), None)
-        if mode is None:
+        _mode = _OPEN_MODES.get(str(mode), None)
+        if _mode is None:
             raise ValueError(lang.WRONG_OPEN_MODE % mode)
-        return fd.File.open(path, mode)
+        return fd.File.open(path, _mode)
     BUILTINS = {
         # 'dict': core.Dict,
         'file': open,
