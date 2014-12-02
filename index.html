@@ -1,0 +1,153 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Owasp-pysec by ebranca</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>Owasp-pysec</h1>
+        <p>OWASP Python Security Project</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/ebranca/owasp-pysec" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/ebranca/owasp-pysec/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/ebranca/owasp-pysec/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h1>
+<a id="owasp-python-security-project---pysec" class="anchor" href="#owasp-python-security-project---pysec" aria-hidden="true"><span class="octicon octicon-link"></span></a>OWASP Python Security Project - PySec</h1>
+
+<p>Python Security is a free, open source, OWASP project that aims at creating a hardened version of python that makes it easier for security professionals and developers to write applications more resilient to attacks and manipulations.</p>
+
+<p>The project is designed to explore how web applications can be developed in python by approaching the problem from three different angles:</p>
+
+<ul>
+<li>Security in python: white-box analysis, structural and functional analysis</li>
+<li>Security of python: black-box analysis, identify and address security-related issues</li>
+<li>Security with python: develop security hardened python suitable for high-risk and high-security environments</li>
+</ul>
+
+<h2>
+<a id="prerequisites" class="anchor" href="#prerequisites" aria-hidden="true"><span class="octicon octicon-link"></span></a>Prerequisites</h2>
+
+<ul>
+<li>gcc, g++, make
+
+<ul>
+<li>ubuntu -&gt; sudo apt-get install gcc g++ make</li>
+<li>debian -&gt; apt-get install gcc g++ make (as root)</li>
+</ul>
+</li>
+<li>build-essential
+
+<ul>
+<li>ubuntu -&gt; sudo apt-get install build-essential</li>
+<li>debian -&gt; apt-get install build-essential (as root)</li>
+</ul>
+</li>
+<li>python-dev
+
+<ul>
+<li>ubuntu -&gt; sudo apt-get install python-dev</li>
+<li>debian -&gt; apt-get install python-dev (as root)</li>
+</ul>
+</li>
+<li>zlib
+
+<ul>
+<li>ubuntu -&gt; sudo apt-get install  zlib1g-dev</li>
+</ul>
+</li>
+</ul>
+
+<h3>
+<a id="optional" class="anchor" href="#optional" aria-hidden="true"><span class="octicon octicon-link"></span></a>Optional</h3>
+
+<ul>
+<li><a href="http://fallabs.com/kyotocabinet/pkg/kyotocabinet-1.2.76.tar.gz" title="Kyoto Cabinet">Kyoto Cabinet</a></li>
+<li><a href="http://fallabs.com/kyotocabinet/pythonlegacypkg/kyotocabinet-python-legacy-1.18.tar.gz" title="Kyoto Cabinet for Python 2.7">Kyoto Cabinet for Python 2.x</a></li>
+</ul>
+
+<h2>
+<a id="install" class="anchor" href="#install" aria-hidden="true"><span class="octicon octicon-link"></span></a>Install</h2>
+
+<pre><code>git clone https://github.com/ebranca/owasp-pysec.git
+cd owasp-pysec/
+python2.7 setup.py install
+</code></pre>
+
+<h2>
+<a id="test" class="anchor" href="#test" aria-hidden="true"><span class="octicon octicon-link"></span></a>Test</h2>
+
+<pre><code>cd tests/
+python runall.py
+</code></pre>
+
+<h2>
+<a id="optional-1" class="anchor" href="#optional-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>Optional</h2>
+
+<h3>
+<a id="kyoto-cabinet" class="anchor" href="#kyoto-cabinet" aria-hidden="true"><span class="octicon octicon-link"></span></a>Kyoto Cabinet</h3>
+
+<pre><code>wget http://fallabs.com/kyotocabinet/pkg/kyotocabinet-1.2.76.tar.gz
+tar zxvf kyotocabinet-1.2.76.tar.gz
+cd kyotocabinet-1.2.76/
+./configure
+make
+make check
+make install
+</code></pre>
+
+<h3>
+<a id="kyoto-cabinet-for-python-27" class="anchor" href="#kyoto-cabinet-for-python-27" aria-hidden="true"><span class="octicon octicon-link"></span></a>Kyoto Cabinet for Python 2.7</h3>
+
+<pre><code>wget http://fallabs.com/kyotocabinet/pythonlegacypkg/kyotocabinet-python-legacy-1.18.tar.gz
+tar zxvf kyotocabinet-python-legacy-1.18.tar.gz
+cd kyotocabinet-python-legacy-1.18/
+python setup.py install
+ln -s /usr/local/lib/libkyotocabinet.so* /usr/lib/
+</code></pre>
+
+<h2>
+<a id="links" class="anchor" href="#links" aria-hidden="true"><span class="octicon octicon-link"></span></a>Links</h2>
+
+<ul>
+<li><a href="http://pythonsecurity.org" title="Python Security">Main site</a></li>
+<li><a href="https://www.owasp.org/index.php/OWASP_Python_Security_Project" title="OWASP Python Security Project">OWASP Page</a></li>
+<li><a href="https://github.com/ebranca/owasp-pysec" title="PySec Github">Github Repository</a></li>
+</ul>
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/ebranca">ebranca</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
