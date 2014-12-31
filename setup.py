@@ -22,7 +22,9 @@ from distutils.core import setup, Extension
 
 packages = [
     'pysec',
+    'pysec.buffer',
     'pysec.core',
+    'pysec.heap',
     'pysec.io',
     'pysec.kv',
     'pysec.lang',
@@ -42,7 +44,10 @@ exts = [
     Extension('pysec.core.fcntl', ['pysec/core/fcntl.c']),
     Extension('pysec.core.stat', ['pysec/core/stat.c']),
     Extension('pysec.core.memory', ['pysec/core/memory.c']),
-    Extension('pysec.core.dirent', ['pysec/core/dirent.c'])
+    Extension('pysec.core.dirent', ['pysec/core/dirent.c']),
+    Extension('pysec.core.socket', ['pysec/core/socket.c']),
+    Extension('pysec.heap.fibonacci', ['pysec/heap/fibonacci.c']),
+    Extension('pysec.buffer.ring', ['pysec/buffer/ring.c'])
 ]
 
 setup(name='pysec',
