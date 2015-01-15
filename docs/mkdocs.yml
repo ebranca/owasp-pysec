@@ -1,0 +1,22 @@
+site_name: OWASP PySec
+repo_url: https://github.com/ebranca/owasp-pysec/
+pages:
+- ['index.md', 'Home']
+
+- ['concerns/builtin/numeric_overflow.md', 'Builtin Concerns', 'Numeric overflow in builtin function xrange']
+- ['concerns/builtin/overflow_len.md', 'Builtin Concerns', 'Overflow in len function']
+- ['concerns/builtin/unsafe_string.md', 'Builtin Concerns', 'Unsafe String interpretation if using input']
+
+- ['concerns/io/missing_checks_invalid.md', 'I/O Concerns', 'Missing checks for invalid write to closed fd']
+- ['concerns/io/overflow_file_date.md', 'I/O Concerns', 'Overflow on posix file date']
+
+- ['concerns/numeric/compare_dec_and_floats.md', 'Numeric Concerns', 'Compare decimal and float']
+- ['concerns/numeric/compare_float_and_str.md', 'Numeric Concerns', 'Compare float with string']
+- ['concerns/numeric/numeric_literal.md', 'Numeric Concerns', 'Numeric literal and whitespaces']
+
+- ['concerns/pickle/code_exec.md', 'Pickle Concerns', 'Unrestricted code execution using pickle']
+- ['concerns/pickle/data_corruption.md', 'Pickle Concerns', 'Possible data corruption using pickle']
+
+
+theme: readthedocs
+
