@@ -53,9 +53,9 @@ except Exception as e:
 
 try:
     len(D())
-    print """OK: 'class C' with 'return 2L' - len calculated"""
+    print """OK: 'class D' with 'return 2L' - len calculated"""
 except Exception as e:
-    print """KO: 'class C' with 'return 2L' - len raise Error: """ + repr(e,)
+    print """KO: 'class D' with 'return 2L' - len raise Error: """ + repr(e,)
 ```
 
 
@@ -98,13 +98,13 @@ OK: 'class B(object)' with 'return 2L' - len calculated
 KO: 'class C' with 'return 100 ** 100'
 Error: TypeError('__len__() should return an int',)
 
-KO: 'class C' with 'return 2L'
+KO: 'class D' with 'return 2L'
 Error: TypeError('__len__() should return an int',)
 ```
 
-in this case the ```len()``` function in python does not check for the legth of the object and does not use "python int objects" (unlimited) and this can cause an ```Overflow``` error as the object may contain the actual `.length` property.
+in this case the ```len()``` function in python does not check for the length of the object and does not use "python int objects" (unlimited) and this can cause an ```Overflow``` error as the object may contain the actual `.length` property.
 
-The reason of this is beacuse ```len(obj)``` is implemented using PyObject_Size(), which in turn it stores the result into a Py_ssize_t, and this object is limited to sys.maxsize (```2**31-1``` for 32bit or ```2**63-1``` for 64bit systems).
+The reason of this is beacuse ```len(obj)``` is implemented using PyObject_Size(), which in turn stores the result into a Py_ssize_t, and this object is limited to sys.maxsize (```2**31-1``` for 32bit or ```2**63-1``` for 64bit systems).
 
 And when the length of the object is bigger then the maximum size of an **integer** object in python, the type of the object changes to **long**.
 
