@@ -54,7 +54,7 @@ Description
 
 The test code is executing an operation that is logically incorrect and should not be allowed by default.
 
-First we open allocate a file descriptor for a write operation hen we close the file descriptor just opened.
+First we allocate a file descriptor for a write operation then we close the file descriptor just opened.
 
 ```
 fd = io.open(sys.stdout.fileno(), 'wb')
