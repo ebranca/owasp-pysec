@@ -63,7 +63,7 @@ Python internal compare function does not verify if a comparison of two objects 
 
 In this case python does not know how to compare ```STRING``` and ```FLOAT``` and returns a ```FALSE``` instead of returning an ```Error```.
 
-In this case we have asked python to compare a an object of type ```STRING```:
+In this case we have asked python to compare an object of type ```STRING```:
 
 ```python
     x = "1234567890"
