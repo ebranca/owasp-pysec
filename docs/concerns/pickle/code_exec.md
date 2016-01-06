@@ -24,7 +24,7 @@ print "== Object =="
 print repr(obj)
 ```
 
-AND COPY FOLLOWING TEXT INTO A FILE NAMED ```bug.pickle```
+And copy following text into a file named ```bug.pickle```
 
 ```python
 cos
@@ -34,7 +34,7 @@ tR.
 
 ```
 
-THEN PUT THIS FILE IN THE SAME FOLDEROF THE ```test.py``` FILE
+Then put this file in the same folder as the ```test.py``` file
 
 Steps to Produce/Reproduce
 --------------------------
