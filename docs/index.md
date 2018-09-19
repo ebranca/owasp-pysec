@@ -2,7 +2,7 @@
 
 Python Security is a free, open source, OWASP project that aims at creating a hardened version of python that makes it easier for security professionals and developers to write applications more resilient to attacks and manipulations.
 
-The project is designed to explore how web applications can be developed in python by approaching the problem from three different angles:
+The project is designed to explore how web applications can be developed in python by developers approaching the problem from three different angles:
 
 + Security in python: white-box analysis, structural and functional analysis
 + Security of python: black-box analysis, identify and address security-related issues
