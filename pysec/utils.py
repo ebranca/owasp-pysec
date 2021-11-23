@@ -17,7 +17,7 @@
 # limitations under the License.
 #
 # -*- coding: ascii -*-
-"""A lot of utilies for:
+"""A lot of utilities for:
     - Operations on paths
     - Counting
 """

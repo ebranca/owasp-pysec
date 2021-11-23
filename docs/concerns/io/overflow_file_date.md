@@ -25,7 +25,7 @@ testfile = 'TESTFILE'
 stinfo = os.stat('TESTFILE')
 print(stinfo)
 
-# Using os.stat to recieve atime and mtime of file
+# Using os.stat to receive atime and mtime of file
 print("access time of TESTFILE: %s" %stinfo.st_atime)
 print("modified time of TESTFILE: %s" %stinfo.st_mtime)
 
@@ -39,7 +39,7 @@ os.utime("TESTFILE",(-2147483648, 2147483648))
 stinfo = os.stat('TESTFILE')
 print(stinfo)
 
-# Using os.stat to recieve atime and mtime of file
+# Using os.stat to receive atime and mtime of file
 print("access time of TESTFILE: %s" %stinfo.st_atime)
 print("modified time of TESTFILE: %s" %stinfo.st_mtime)
 
@@ -49,7 +49,7 @@ os.utime("TESTFILE",(1330712280, 1330712292))
 stinfo = os.stat('TESTFILE')
 print(stinfo)
 
-# Using os.stat to recieve atime and mtime of file
+# Using os.stat to receive atime and mtime of file
 print("access time of TESTFILE: %s" %stinfo.st_atime)
 print("modified time of TESTFILE: %s" %stinfo.st_mtime)
 
