@@ -11,7 +11,7 @@ import paypal.exceptions
 
 class PayPalResponse(object):
     """
-    Parse and prepare the reponse from PayPal's API. Acts as somewhat of a
+    Parse and prepare the response from PayPal's API. Acts as somewhat of a
     glorified dictionary for API responses.
     
     NOTE: Don't access self.raw directly. Just do something like

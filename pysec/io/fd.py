@@ -283,7 +283,7 @@ class File(FD):
     @check.delimit('fd-reg-open')
     def open(fpath, oflags, mode=0666):
         """Open a file descript for a regular file in fpath using the open mode
-        specifie by *oflag* with *mode*"""
+        specified by *oflag* with *mode*"""
         _oflags = FOFLAGS2OFLAGS.get(int(oflags), None)
         if oflags is None:
             raise ValueError("unknown file open mode: %r" % oflags)
@@ -526,7 +526,7 @@ class Directory(FD):
 
     def fileat(self, fpath, oflags, mode=0644):
         """Open a file descript for a regular file in fpath using the open mode
-        specifie by *oflag* with *mode*"""
+        specified by *oflag* with *mode*"""
         _oflags = FOFLAGS2OFLAGS.get(int(oflags), None)
         if oflags is None:
             raise ValueError("unknown file open mode: %r" % oflags)
